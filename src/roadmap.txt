@@ -1,0 +1,20 @@
+
+  [ROADMAP]
+
+1.1:
+[ ] Add an optional tech unlock
+[ ] Add a player setting for showing/hiding the hover info?
+
+TBD:
+[ ] Append channel editor/viewer to existing vanilla GUIs (waiting on mod API support)
+[ ] Sync channel force relationships to base force on relationship change events instead of periodically (waiting
+    on mod API support)
+
+
+
+  [KNOWN LIMITATIONS]
+  
+-   Channel forces do not currently sync diplomacy settings with the base force, so e.g. if another mod sets a
+    cease-fire with the base force, the channel forces will not inherit that setting and may be attacked
+-   Only channel 0 networks will show up in the Networks GUI. Seems that GUI does not show friendly force networks.
+-   Player logistic requests are only handled from channel 0.
