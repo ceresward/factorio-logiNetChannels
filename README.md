@@ -25,6 +25,7 @@ The mod works by creating factions for each channel that are linked with the mai
 - Similarly, construction bots will not build or repair entities from other forces, so construction bots should remain on channel 0 as well.
 - The logistic networks for channels beyond 0 are not highlighted in map mode, and do not appear in the Logistic Networks GUI ( <kbd>L</kbd> )
 - It is not currently possible to keep the channel force diplomacy (`friend`/`cease-fire`) in sync with the main force diplomacy.  For example, suppose a different mod creates a new force `foobar`, and later gives it `cease-fire` with `player`.  The channel forces `player.channel.#` do not automatically get the cease-fire as well, so entities from `foobar` may still try and attack logistic network entities on channels other than channel 0.
+- Channel force entities cannot be blueprinted
 
 ## Roadmap
 
@@ -37,6 +38,7 @@ The mod works by creating factions for each channel that are linked with the mai
 ### Unscheduled
 - [ ] Append channel editor/viewer to existing vanilla GUIs (mod API does not yet support)
 - [ ] Keep channel force diplomacy with other forces in sync with the main player force diplomacy (needs diplomacy change listeners to be added to the mod API)
+- [ ] Find a workaround if possible for the blueprinting limitation
 
 ## Release Notes
 
