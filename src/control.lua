@@ -2,19 +2,6 @@
 
 require("mod-gui")
 
---
---   [ROADMAP]
---
--- 1.1:
--- [ ] Add an optional tech unlock
--- [ ] Add a player setting for showing/hiding the hover info?
---
--- TBD:
--- [ ] Append channel editor/viewer to existing vanilla GUIs (waiting on mod API support)
--- [ ] Sync channel force relationships to base force on relationship change events instead of periodically (waiting
---     on mod API support)
---
-
 function get_editor_gui(player)
 	local parent = mod_gui.get_frame_flow(player)
 	if not parent.logiNetChannelEditor then
@@ -87,7 +74,27 @@ function update_hover_gui(player)
 	end
 end
 
+local FORCE_REGEX = "(.+)%.channel%.(%d+)"
+
+function parse_channel_forcename(force_name)
+    local base_name, channel = string.match(force_name, FORCE_REGEX)
+    return base_name, tonumber(channel)
+end
+
+function is_channel_force(force)
+    return string.match(force.name, FORCE_REGEX) ~= nil
+end
+
 function get_channel_force(base_force, channel)
+    if not channel or channel == 0 then
+		return base_force
+	else
+        local channel_force_name = base_force.name .. ".channel." .. channel
+        return game.forces[channel_force_name]
+    end
+end
+
+function get_or_create_channel_force(base_force, channel)
 	if not channel or channel == 0 then
 		return base_force
 	else
@@ -98,15 +105,10 @@ function get_channel_force(base_force, channel)
 			channel_force.set_cease_fire(base_force, true)
 			base_force.set_friend(channel_force, true)
 			base_force.set_cease_fire(channel_force, true)
+            syncAllTechToChannel(base_force, channel)
 		end
 		return game.forces[channel_force_name]
 	end
-end
-
-function parse_channel_forcename(force_name)
-    local FORCE_REGEX = "(.+)%.channel%.(%d+)"
-    local base_name, channel = string.match(force_name, FORCE_REGEX)
-    return base_name, tonumber(channel)
 end
 
 function get_channel(entity)
@@ -125,7 +127,7 @@ function set_channel(entity, channel)
 		return
 	end
 	
-	entity.force = get_channel_force(base_force, channel)
+	entity.force = get_or_create_channel_force(base_force, channel)
 end
 
 function syncChannelLimit()
@@ -154,11 +156,40 @@ function syncChannelLimit()
     global.channelLimit = newLimit;
 end
 
+function syncSingleTechToChannels(technology)
+    for channel = 1,global.channelLimit do
+        local channel_force = get_channel_force(technology.force, channel)
+        if channel_force then
+            channel_force.technologies[technology.name].researched = technology.researched
+        end
+    end
+end
+
+function syncAllTechToChannel(base_force, channel)
+    local channel_force = get_channel_force(base_force, channel)
+    if channel_force then
+        for name,tech in pairs(base_force.technologies) do
+            channel_force.technologies[name].researched = tech.researched;
+        end
+    end
+end
+
+function syncAllTechToChannels(base_force)
+    for channel = 1,global.channelLimit do
+        syncAllTechToChannel(base_force, channel)
+    end
+end
+
 script.on_init(syncChannelLimit)
 script.on_configuration_changed(
     function(data)
         -- game.print("on_configuration_changed: ".. serpent.block(data))
         syncChannelLimit()
+        for name, force in pairs(game.forces) do
+            if not is_channel_force(force) then
+                syncAllTechToChannels(force)
+            end
+        end
     end
    )
 script.on_event(defines.events.on_runtime_mod_setting_changed,
@@ -240,5 +271,10 @@ script.on_event(defines.events.on_selected_entity_changed,
 	end
 )
 
-
-
+script.on_event(defines.events.on_research_finished,
+    function(event)
+        if is_multichannel() then
+            syncSingleTechToChannels(event.research)
+        end
+    end
+)
