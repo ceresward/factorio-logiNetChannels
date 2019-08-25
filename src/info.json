@@ -7,5 +7,5 @@
     "homepage": "https://github.com/ceresward/factorio-logiNetChannels",
     "factorio_version": "0.17",
     "dependencies": ["base >= 0.17"],
-    "description": "Configure logistic network entities (roboports, logistic chests, etc.) to use different communication channels.  The entities will only form a network with other entities in the same channel."
+    "description": "Adds communication channels to logistic networks. Logistic entities can be assigned to different channels, and will only form a network with other entities on the same channel. This allows for creating separate logistic networks in areas where they would normally overlap and be merged by the game into one network."
 }
