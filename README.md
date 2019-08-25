@@ -42,11 +42,4 @@ The mod works by creating factions for each channel that are linked with the mai
 
 ## Release Notes
 
-### 1.0.1
-- [X] Add logic to sync technologies from the main force to channel forces (otherwise channel forces would not be able to use the bot speed research, etc.)
-
-### 1.0
-
-- [X] Logic for getting and setting channels on entities
-- [X] GUIs for viewing and editing the channel setting for individual entities
-- [X] Map setting for changing the channel limit
+See https://mods.factorio.com/mod/LogiNetChannels/changelog
