@@ -5,6 +5,6 @@ param (
  )
 $modname = "LogiNetChannels_$version"
 Copy-Item -Path .\src -Recurse -Destination $modname -Container
-Compress-Archive -Path $modname -DestinationPath "$modname.zip"
-Remove-Item -Path $modname -Recurse
-Move-Item -Path "$modname.zip" -Destination "zip"
+#Compress-Archive -Path $modname -DestinationPath "$modname.zip"
+#Remove-Item -Path $modname -Recurse
+#Move-Item -Path "$modname.zip" -Destination "zip"
