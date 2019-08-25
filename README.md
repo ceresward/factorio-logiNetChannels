@@ -11,6 +11,12 @@ Logistic Network Channels is a mod for the video game [Factorio](https://factori
 
 The mod works by creating factions for each channel that are linked with the main player faction(s).  For example, when an entity of the `player` faction is assigned to channel 1, that entity gets transferred to faction `player.channel.1`.  The channel factions are configured to have mutual `friend` and `cease-fire` relationships with the main player faction, which allows the player to continue interacting with the entities as thought they were still part of the main player faction.  Channel 0 is special - entities on channel 0 are assigned to the main player force, as they normally are.  And if the channel limit is reduced while a map is running, any entities that get orphaned get reassigned back to channel 0.
 
+### Features
+
+- Assign logistics entities to up to 50 different network channels using the entity GUI
+- Map-configurable setting for the channel limit (1-50; setting the channel limit to 1 disables mod features)
+- Copy channel setting when copy-pasting entity settings
+
 ### Limitations
 
 - Factorio has a limit of 60 forces per map.  So the maximum channel limit is set conservatively at 50 channels.  Note that other mods may also add forces to the game, so the effective limit may be even lower.  Also, in multiplayer, there may be multiple player forces.  Each player force will have its own set of channels, so take that into account.  Example: in a PVP map with three player forces, the channel limit should be set no higher than 18 (18 * 3 = 54).
