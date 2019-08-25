@@ -16,6 +16,7 @@ The mod works by creating factions for each channel that are linked with the mai
 - Assign logistics entities to up to 50 different network channels using the entity GUI
 - Map-configurable setting for the channel limit (1-50; setting the channel limit to 1 disables mod features)
 - Copy channel setting when copy-pasting entity settings
+- Mod checks in a generic way for logistics entities, so modded entities should just work
 
 ### Limitations
 
