@@ -9,45 +9,30 @@ function get_editor_gui(player)
 			type="frame",
 			name="logiNetChannelEditor",
 			caption="Logistic Network Channel",
-			direction="horizontal"
+			direction="vertical"
 		}
 		editor.visible = false;
 		
-		editor.add{
-			type="flow",
-			name="flow",
-			caption="Logistic Network Channel",
-			direction="horizontal"
-		}
-		editor.flow.style.horizontal_spacing = 12;
+		local sliderRow = editor.add{ type="flow", name="sliderRow", caption="Slider Row", direction="horizontal" }
+		sliderRow.style.horizontal_spacing = 12;
 		
-		local channelLimit = settings.global["logiNetChannelLimit"].value
-		editor.flow.add{
-			type="label",
-			name="channelLabel",
-			caption="0"
+		sliderRow.add{ type="label", name="label", caption="0" }
+		sliderRow.label.style.font = "default-large-semibold"
+        
+        local channelLimit = settings.global["logiNetChannelLimit"].value
+		sliderRow.add{
+			type="slider", name="slider",
+			minimum_value=0, maximum_value=(channelLimit-1), value_step=1,
+			discrete_slider=true, discrete_values=true
 		}
-		editor.flow.channelLabel.style.font = "default-large-semibold"
-		editor.flow.add{
-			type="slider",
-			name="channelSlider",
-			minimum_value=0,
-			maximum_value=(channelLimit-1),
-			value_step=1,
-			discrete_slider=true,
-			discrete_values=true
-		}
+        
+        local labelRow = editor.add{ type="flow", name="labelRow", caption="Label Row", direction="horizontal" }
+        labelRow.style.horizontal_spacing = 12;
+        
+        labelRow.add{ type="label", name="label", caption="Label: " }
+        labelRow.add{ type="textfield", name="textfield", lose_focus_on_confirm=true }
 	end
 	return parent.logiNetChannelEditor
-end
-
-function is_multichannel()
-    local channelLimit = global.channelLimit
-	return channelLimit and channelLimit > 1
-end
-
-function is_editable_entity(entity)
-	return entity and (entity.logistic_network or #entity.get_logistic_point() > 0)
 end
 
 function get_hover_gui(player)
@@ -62,16 +47,23 @@ function get_hover_gui(player)
 	return parent.logiNetChannelHover
 end
 
-function update_hover_gui(player)
-	local hover = get_hover_gui(player)
-	local editor = get_editor_gui(player)
-    
-	if is_multichannel() and not editor.visible and is_editable_entity(player.selected) then
-		hover.caption = "Logistic Network Channel: "..get_channel(player.selected)
-		hover.visible = true
-	else
-		hover.visible = false
-	end
+function reset_guis(player)
+    local parent = mod_gui.get_frame_flow(player)
+    if parent.logiNetChannelEditor then
+        parent.logiNetChannelEditor.destroy()
+    end
+    if parent.logiNetChannelHover then
+        parent.logiNetChannelEditor.destroy()
+    end
+end
+
+function is_multichannel()
+    local channelLimit = global.channelLimit
+	return channelLimit and channelLimit > 1
+end
+
+function is_editable_entity(entity)
+	return entity and (entity.logistic_network or #entity.get_logistic_point() > 0)
 end
 
 local FORCE_REGEX = "(.+)%.channel%.(%d+)"
@@ -85,11 +77,19 @@ function is_channel_force(force)
     return string.match(force.name, FORCE_REGEX) ~= nil
 end
 
+function get_channel_force_name(base_name, channel)
+    if not channel or channel == 0 then
+		return base_name
+	else
+        return base_name .. ".channel." .. channel
+    end
+end
+
 function get_channel_force(base_force, channel)
     if not channel or channel == 0 then
 		return base_force
 	else
-        local channel_force_name = base_force.name .. ".channel." .. channel
+        local channel_force_name = get_channel_force_name(base_force.name, channel)
         return game.forces[channel_force_name]
     end
 end
@@ -98,7 +98,7 @@ function get_or_create_channel_force(base_force, channel)
 	if not channel or channel == 0 then
 		return base_force
 	else
-		local channel_force_name = base_force.name .. ".channel." .. channel
+		local channel_force_name = get_channel_force_name(base_force.name, channel)
 		if not game.forces[channel_force_name] then
 			local channel_force = game.create_force(channel_force_name)
 			channel_force.set_friend(base_force, true)
@@ -128,6 +128,64 @@ function set_channel(entity, channel)
 	end
 	
 	entity.force = get_or_create_channel_force(base_force, channel)
+end
+
+function get_channel_label(channel_force_name)
+    global.channel_labels = global.channel_labels or {}
+    
+    local _, channel = parse_channel_forcename(channel_force_name)
+    if channel and channel > 0 then
+        return global.channel_labels[channel_force_name]
+    end
+    
+    return 'default'
+end
+
+function set_channel_label(channel_force_name, label)
+    global.channel_labels = global.channel_labels or {}
+    
+    local _, channel = parse_channel_forcename(channel_force_name)
+    if channel and channel > 0 then
+        global.channel_labels[channel_force_name] = label;
+    end
+end
+
+function update_guis(player)
+	local hover = get_hover_gui(player)
+	local editor = get_editor_gui(player)
+    
+    local show_hover = false
+    local show_editor = false
+	if is_multichannel() then
+        show_editor = is_editable_entity(player.opened)
+        show_hover = not show_editor and is_editable_entity(player.selected)
+    end
+    
+    if show_editor then
+        local channel = editor.sliderRow.slider.slider_value
+        if channel and channel >= 0 then
+            editor.sliderRow.label.caption = channel
+            local channel_force_name = get_channel_force_name(player.opened.force.name, channel)
+            editor.labelRow.textfield.text = get_channel_label(channel_force_name) or ''
+            editor.labelRow.textfield.enabled = (channel > 0)
+        else
+            editor.sliderRow.label.caption = '?'
+            editor.labelRow.textfield.text = ''
+            editor.labelRow.textfield.enabled = false
+        end
+    end
+        
+    if show_hover then
+        local caption = "Logistic Network Channel: "..get_channel(player.selected)
+        local label = get_channel_label(player.selected.force.name)
+        if label then
+            caption = caption..' ('..label..')'
+        end
+        hover.caption = caption
+    end
+    
+    editor.visible = show_editor
+    hover.visible = show_hover
 end
 
 function syncChannelLimit()
@@ -190,6 +248,9 @@ script.on_configuration_changed(
                 syncAllTechToChannels(force)
             end
         end
+        for name, player in pairs(game.players) do
+            reset_guis(player)
+        end
     end
    )
 script.on_event(defines.events.on_runtime_mod_setting_changed,
@@ -205,10 +266,26 @@ script.on_event(defines.events.on_gui_value_changed,
 	function(event)
 		local player = game.get_player(event.player_index)
 		local editor = get_editor_gui(player);
-		if editor.flow.channelSlider == event.element then
-			editor.flow.channelLabel.caption = editor.flow.channelSlider.slider_value
+        
+		if editor.sliderRow.slider == event.element then
+            update_guis(player)
 		end
+        
 	end
+)
+
+script.on_event(defines.events.on_gui_text_changed,
+    function(event)
+        local player = game.get_player(event.player_index)
+		local editor = get_editor_gui(player);
+        
+        if editor.labelRow.textfield == event.element and is_editable_entity(player.opened) then
+            local channel = editor.sliderRow.slider.slider_value
+            local channel_force_name = get_channel_force_name(player.opened.force.name, channel)
+            set_channel_label(channel_force_name, editor.labelRow.textfield.text)
+            update_guis(player)
+        end
+    end
 )
 
 script.on_event(defines.events.on_gui_opened,
@@ -219,12 +296,10 @@ script.on_event(defines.events.on_gui_opened,
 			local editor = get_editor_gui(player)
             local channel = get_channel(entity);
             
-            editor.flow.channelSlider.set_slider_minimum_maximum(0, global.channelLimit - 1)
-			editor.flow.channelSlider.slider_value = channel
-			editor.flow.channelLabel.caption = channel
-			editor.visible = true
+            editor.sliderRow.slider.set_slider_minimum_maximum(0, global.channelLimit - 1)
+			editor.sliderRow.slider.slider_value = channel
 			
-			update_hover_gui(player)
+			update_guis(player)
 		end
 	end
 )
@@ -236,11 +311,10 @@ script.on_event(defines.events.on_gui_closed,
 			local player = game.get_player(event.player_index)
 			local editor = get_editor_gui(player);
 			
-			local channel = editor.flow.channelSlider.slider_value;
+			local channel = editor.sliderRow.slider.slider_value;
 			set_channel(entity, channel)
-			editor.visible = false
 			
-			update_hover_gui(player)
+			update_guis(player)
 		end
 	end
 )
@@ -256,7 +330,7 @@ script.on_event(defines.events.on_entity_settings_pasted,
 			local channel = get_channel(source);
 			set_channel(destination, channel)
 			
-			update_hover_gui(player)
+			update_guis(player)
 		end
 	end
 )
@@ -266,7 +340,7 @@ script.on_event(defines.events.on_selected_entity_changed,
         if is_multichannel() then
             local player = game.get_player(event.player_index)
             local entity = player.selected
-            update_hover_gui(player)
+            update_guis(player)
         end
 	end
 )
