@@ -11,9 +11,11 @@ Additional information about how the mod works, features, and limitations can be
 
 ## Roadmap
 
+_A checkmark means the item is completed and has been pushed into the `develop` branch_
+
 ### 1.1
-- [ ] Solution to allow channel entities to be blueprinted
-- [ ] Assign labels to channels to help keep track of the channel purpose
+- [X] Solution to allow channel entities to be blueprinted
+- [X] Assign labels to channels to help keep track of the channel purpose
 - [ ] Per-player setting to show or hide channel information on hover
 
 ### 1.2
