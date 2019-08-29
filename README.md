@@ -12,15 +12,19 @@ Additional information about how the mod works, features, and limitations can be
 ## Roadmap
 
 ### 1.1
+- [ ] Solution to allow channel entities to be blueprinted
+- [ ] Assign labels to channels to help keep track of the channel purpose
+- [ ] Per-player setting to show or hide channel information on hover
+
+### 1.2
 - [ ] Unlock channels through research (optional)
-- [ ] Player-specific setting for showing/hiding the hover info
-- [ ] Ability to set channel by circuit signal
-- [ ] Let players label channels to help keep track of which is which
+- [ ] Control the assigned channel using circuit signals
 
 ### Unscheduled
-- [ ] Append channel editor/viewer to existing vanilla GUIs (mod API does not yet support)
-- [ ] Keep channel force diplomacy with other forces in sync with the main player force diplomacy (needs diplomacy change listeners to be added to the mod API)
-- [ ] Find a workaround if possible for the blueprinting limitation
+- [ ] Append channel editor/viewer to existing vanilla GUIs
+    - _Blocked: mod API does not yet support_
+- [ ] Keep channel force diplomacy with other forces in sync with the main player force diplomacy
+    - _Blocked: mode API does not yet support diplomacy change listeners_
 
 ## Release Notes
 
