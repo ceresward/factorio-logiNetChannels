@@ -53,7 +53,7 @@ function reset_guis(player)
         parent.logiNetChannelEditor.destroy()
     end
     if parent.logiNetChannelHover then
-        parent.logiNetChannelEditor.destroy()
+        parent.logiNetChannelHover.destroy()
     end
 end
 
