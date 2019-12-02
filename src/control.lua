@@ -1,6 +1,7 @@
 --control.lua
 
 require("mod-gui")
+local channels = require("lib.channels")
 
 function get_editor_gui(player)
 	local parent = mod_gui.get_frame_flow(player)
@@ -66,30 +67,11 @@ function is_editable_entity(entity)
 	return entity and (entity.logistic_network or #entity.get_logistic_point() > 0)
 end
 
-local FORCE_REGEX = "(.+)%.channel%.(%d+)"
-
-function parse_channel_forcename(force_name)
-    local base_name, channel = string.match(force_name, FORCE_REGEX)
-    return base_name, tonumber(channel)
-end
-
-function is_channel_force(force)
-    return string.match(force.name, FORCE_REGEX) ~= nil
-end
-
-function get_channel_force_name(base_name, channel)
-    if not channel or channel == 0 then
-		return base_name
-	else
-        return base_name .. ".channel." .. channel
-    end
-end
-
 function get_channel_force(base_force, channel)
     if not channel or channel == 0 then
 		return base_force
 	else
-        local channel_force_name = get_channel_force_name(base_force.name, channel)
+        local channel_force_name = channels.to_channel_force_name(base_force.name, channel)
         return game.forces[channel_force_name]
     end
 end
@@ -98,7 +80,7 @@ function get_or_create_channel_force(base_force, channel)
 	if not channel or channel == 0 then
 		return base_force
 	else
-		local channel_force_name = get_channel_force_name(base_force.name, channel)
+		local channel_force_name = channels.to_channel_force_name(base_force.name, channel)
 		if not game.forces[channel_force_name] then
 			local channel_force = game.create_force(channel_force_name)
 			channel_force.set_friend(base_force, true)
@@ -112,14 +94,12 @@ function get_or_create_channel_force(base_force, channel)
 end
 
 function get_channel(entity)
-	local _, channel = parse_channel_forcename(entity.force.name)
+    local _, channel = channels.parse_channel_force_name(entity.force.name)
 	return channel or 0
 end
 
 function set_channel(entity, channel)
-	local base_name, _ = parse_channel_forcename(entity.force.name)
-	base_name = base_name or entity.force.name
-	
+	local base_name, _ = channels.parse_channel_force_name(entity.force.name)
 	local base_force = game.forces[base_name]
 	if not base_force then
 		-- TODO: do something better...
@@ -133,7 +113,7 @@ end
 function get_channel_label(channel_force_name)
     global.channel_labels = global.channel_labels or {}
     
-    local _, channel = parse_channel_forcename(channel_force_name)
+    local _, channel = channels.parse_channel_force_name(channel_force_name)
     if channel and channel > 0 then
         return global.channel_labels[channel_force_name]
     end
@@ -144,7 +124,7 @@ end
 function set_channel_label(channel_force_name, label)
     global.channel_labels = global.channel_labels or {}
     
-    local _, channel = parse_channel_forcename(channel_force_name)
+    local _, channel = channels.parse_channel_force_name(channel_force_name)
     if channel and channel > 0 then
         global.channel_labels[channel_force_name] = label;
     end
@@ -165,7 +145,8 @@ function update_guis(player)
         local channel = editor.sliderRow.slider.slider_value
         if channel and channel >= 0 then
             editor.sliderRow.label.caption = channel
-            local channel_force_name = get_channel_force_name(player.opened.force.name, channel)
+            local base_force_name, _ = channels.parse_channel_force_name(player.opened.force.name)
+            local channel_force_name = channels.to_channel_force_name(base_force_name, channel)
             editor.labelRow.textfield.text = get_channel_label(channel_force_name) or ''
             editor.labelRow.textfield.enabled = (channel > 0)
         else
@@ -191,14 +172,16 @@ end
 function syncChannelLimit()
 	local currentLimit = global.channelLimit
 	local newLimit = settings.global["logiNetChannelLimit"].value;
-	
-    game.print("[Logistic Network Channels] Channel limit changing from "..tostring(currentLimit).." to "..
-        tostring(newLimit));
+    
+    if (currentLimit ~= newLimit) then
+        game.print("[Logistic Network Channels] Channel limit changing from "..tostring(currentLimit).." to "..
+            tostring(newLimit));
+    end
         
 	if currentLimit and currentLimit > newLimit then
         local mergedForceCount = 0
 		for name,force in pairs(game.forces) do
-			local baseName, channel = parse_channel_forcename(name)
+			local baseName, channel = channels.parse_channel_force_name(name)
 			if channel and channel >= newLimit then
 				game.merge_forces(name, baseName)
                 mergedForceCount = mergedForceCount + 1
@@ -244,7 +227,7 @@ script.on_configuration_changed(
         -- game.print("on_configuration_changed: ".. serpent.block(data))
         syncChannelLimit()
         for name, force in pairs(game.forces) do
-            if not is_channel_force(force) then
+            if not channels.is_channel_force_name(force.name) then
                 syncAllTechToChannels(force)
             end
         end
@@ -281,7 +264,8 @@ script.on_event(defines.events.on_gui_text_changed,
         
         if editor.labelRow.textfield == event.element and is_editable_entity(player.opened) then
             local channel = editor.sliderRow.slider.slider_value
-            local channel_force_name = get_channel_force_name(player.opened.force.name, channel)
+            local base_force_name, _ = channels.parse_channel_force_name(player.opened.force.name)
+            local channel_force_name = channels.to_channel_force_name(base_force_name, channel)
             set_channel_label(channel_force_name, editor.labelRow.textfield.text)
             update_guis(player)
         end
