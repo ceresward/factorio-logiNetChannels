@@ -68,6 +68,10 @@ function is_editable_entity(entity)
 	return entity and (entity.logistic_network or #entity.get_logistic_point() > 0)
 end
 
+function is_hover_enabled(player)
+    return settings.get_player_settings(player)["logiNetChannels-show-hover"].value
+end
+
 function get_channel_force(base_force, channel)
     if not channel or channel == 0 then
 		return base_force
@@ -139,7 +143,7 @@ function update_guis(player)
     local show_editor = false
 	if is_multichannel() then
         show_editor = is_editable_entity(player.opened)
-        show_hover = not show_editor and is_editable_entity(player.selected)
+        show_hover = is_hover_enabled(player) and not show_editor and is_editable_entity(player.selected)
     end
     
     if show_editor then
