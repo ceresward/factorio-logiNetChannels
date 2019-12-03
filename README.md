@@ -14,19 +14,20 @@ Additional information about how the mod works, features, and limitations can be
 _A checkmark means the item is completed and has been pushed into the `develop` branch_
 
 ### 1.1
-- [X] Solution to allow channel entities to be blueprinted
 - [X] Assign labels to channels to help keep track of the channel purpose
 - [X] Per-player setting to show or hide channel information on hover
+
+### 1.1.1
+- [ ] Solution to allow channel entities to be blueprinted (optional dependency on a planned new mod: Friends Blueprint)
 
 ### 1.2
 - [ ] Unlock channels through research (optional)
 - [ ] Control the assigned channel using circuit signals
 
 ### Unscheduled
+- [ ] Keep channel force diplomacy with other forces in sync with the main player force diplomacy (possibly as a separate library mod)
 - [ ] Append channel editor/viewer to existing vanilla GUIs
     - _Blocked: mod API does not yet support_
-- [ ] Keep channel force diplomacy with other forces in sync with the main player force diplomacy
-    - _Blocked: mode API does not yet support diplomacy change listeners_
 
 ## Release Notes
 
