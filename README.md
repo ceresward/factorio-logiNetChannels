@@ -16,7 +16,7 @@ _A checkmark means the item is completed and has been pushed into the `develop` 
 ### 1.1
 - [X] Solution to allow channel entities to be blueprinted
 - [X] Assign labels to channels to help keep track of the channel purpose
-- [ ] Per-player setting to show or hide channel information on hover
+- [X] Per-player setting to show or hide channel information on hover
 
 ### 1.2
 - [ ] Unlock channels through research (optional)
@@ -31,3 +31,7 @@ _A checkmark means the item is completed and has been pushed into the `develop` 
 ## Release Notes
 
 See https://mods.factorio.com/mod/LogiNetChannels/changelog
+
+## Attribution
+
+- "Multiple Users Silhouette" icon (Friends blueprint) made by Freepik from www.flaticon.com
