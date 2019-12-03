@@ -1,8 +1,8 @@
 --control.lua
 
 require("mod-gui")
-require("lib.control_friends_blueprint")
-local channels = require("lib.channels")
+require("control.control_friends_blueprint")
+local channels = require("control.channels")
 
 function get_editor_gui(player)
 	local parent = mod_gui.get_frame_flow(player)
