@@ -32,7 +32,3 @@ _A checkmark means the item is completed and has been pushed into the `develop` 
 ## Release Notes
 
 See https://mods.factorio.com/mod/LogiNetChannels/changelog
-
-## Attribution
-
-- "Multiple Users Silhouette" icon (Friends blueprint) made by Freepik from www.flaticon.com

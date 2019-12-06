@@ -1,7 +1,6 @@
 --control.lua
 
 require("mod-gui")
-require("control.friends_blueprint")
 local channels = require("control.channels")
 
 function get_editor_gui(player)
