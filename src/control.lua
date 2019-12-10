@@ -63,8 +63,15 @@ function is_multichannel()
 	return channelLimit and channelLimit > 1
 end
 
-function is_editable_entity(entity)
-	return entity and (entity.logistic_network or #entity.get_logistic_point() > 0)
+function is_logistics_entity(entity)
+    function has_logistic_network()
+        return entity and entity.logistic_network
+    end
+    function has_logistic_points()
+        return entity and entity.get_logistic_point and #entity.get_logistic_point() > 0;
+    end
+
+    return has_logistic_network() or has_logistic_points()
 end
 
 function is_hover_enabled(player)
@@ -140,9 +147,10 @@ function update_guis(player)
     
     local show_hover = false
     local show_editor = false
-	if is_multichannel() then
-        show_editor = is_editable_entity(player.opened)
-        show_hover = is_hover_enabled(player) and not show_editor and is_editable_entity(player.selected)
+    if is_multichannel() then
+        -- show_editor = (player.opened_gui_type == defines.gui_type.entity) and is_logistics_entity(player.opened)
+        show_editor = is_logistics_entity(player.opened)
+        show_hover = is_hover_enabled(player) and not show_editor and is_logistics_entity(player.selected)
     end
     
     if show_editor then
@@ -266,7 +274,7 @@ script.on_event(defines.events.on_gui_text_changed,
         local player = game.get_player(event.player_index)
 		local editor = get_editor_gui(player);
         
-        if editor.labelRow.textfield == event.element and is_editable_entity(player.opened) then
+        if editor.labelRow.textfield == event.element and is_logistics_entity(player.opened) then
             local channel = editor.sliderRow.slider.slider_value
             local base_force_name, _ = channels.parse_channel_force_name(player.opened.force.name)
             local channel_force_name = channels.to_channel_force_name(base_force_name, channel)
@@ -279,7 +287,7 @@ script.on_event(defines.events.on_gui_text_changed,
 script.on_event(defines.events.on_gui_opened,
 	function(event)
 		local entity = event.entity
-		if is_multichannel() and is_editable_entity(entity) then
+		if is_multichannel() and is_logistics_entity(entity) then
 			local player = game.get_player(event.player_index)
 			local editor = get_editor_gui(player)
             local channel = get_channel(entity);
@@ -295,7 +303,7 @@ script.on_event(defines.events.on_gui_opened,
 script.on_event(defines.events.on_gui_closed,
 	function(event)
         local entity = event.entity
-		if is_multichannel() and is_editable_entity(entity) then
+		if is_multichannel() and is_logistics_entity(entity) then
 			local player = game.get_player(event.player_index)
 			local editor = get_editor_gui(player);
 			
@@ -311,7 +319,7 @@ script.on_event(defines.events.on_entity_settings_pasted,
 	function(event)
 		local source = event.source;
 		local destination = event.destination;
-		if is_multichannel() and is_editable_entity(source) and is_editable_entity(destination)
+		if is_multichannel() and is_logistics_entity(source) and is_logistics_entity(destination)
 		then
 			local player = game.get_player(event.player_index)
 			
