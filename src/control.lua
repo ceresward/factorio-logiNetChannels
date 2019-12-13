@@ -64,6 +64,8 @@ function is_multichannel()
 end
 
 function is_logistics_entity(entity)
+    -- Note:  the parameter value MUST be a LuaEntity!  There is no way to safely check the type
+    -- of an arbitrary Factorio object, so this must be the caller's responsibility
     function has_logistic_network()
         return entity and entity.logistic_network
     end
@@ -72,6 +74,13 @@ function is_logistics_entity(entity)
     end
 
     return has_logistic_network() or has_logistic_points()
+end
+
+function is_logistics_entity_opened(player)
+    function is_entity_opened()
+        return player.opened_gui_type == defines.gui_type.entity
+    end
+    return is_entity_opened() and is_logistics_entity(player.opened)
 end
 
 function is_hover_enabled(player)
@@ -148,8 +157,7 @@ function update_guis(player)
     local show_hover = false
     local show_editor = false
     if is_multichannel() then
-        -- show_editor = (player.opened_gui_type == defines.gui_type.entity) and is_logistics_entity(player.opened)
-        show_editor = is_logistics_entity(player.opened)
+        show_editor = is_logistics_entity_opened(player)
         show_hover = is_hover_enabled(player) and not show_editor and is_logistics_entity(player.selected)
     end
     
@@ -274,7 +282,7 @@ script.on_event(defines.events.on_gui_text_changed,
         local player = game.get_player(event.player_index)
 		local editor = get_editor_gui(player);
         
-        if editor.labelRow.textfield == event.element and is_logistics_entity(player.opened) then
+        if editor.labelRow.textfield == event.element and is_logistics_entity_opened(player) then
             local channel = editor.sliderRow.slider.slider_value
             local base_force_name, _ = channels.parse_channel_force_name(player.opened.force.name)
             local channel_force_name = channels.to_channel_force_name(base_force_name, channel)
