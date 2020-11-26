@@ -1,11 +1,11 @@
 {
     "name": "LogiNetChannels",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "title": "Logistic Network Channels",
     "author": "ceresward",
     "contact": "https://reddit.com/u/ceresward",
     "homepage": "https://github.com/ceresward/factorio-logiNetChannels",
-    "factorio_version": "1.0",
-    "dependencies": ["base >= 1.0"],
+    "factorio_version": "1.1",
+    "dependencies": ["base >= 1.1"],
     "description": "Adds communication channels to logistic networks. Logistic entities can be assigned to different channels, and will only form a network with other entities on the same channel. This allows for creating separate logistic networks in areas where they would normally overlap and be merged by the game into one network."
 }
