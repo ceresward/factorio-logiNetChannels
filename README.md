@@ -16,6 +16,7 @@ Additional information about how the mod works, features, and limitations can be
 - [ ] Ability to set assigned channel using circuit signals
 
 ### Unscheduled
+- [ ] Ability to change channels by directly entering a number instead of fiddling with the slider
 - [ ] Keep channel force diplomacy (friends/cease-fire) in sync with the main player force diplomacy (possibly as a separate library mod)
 - [ ] Edit/view channel property from the main entity GUI instead of the upper left corner
     - _Blocked: mod API does not yet support modifying base game GUIs_

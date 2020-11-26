@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.7
+Date: 26. 11. 2020
+  Features:
+    - Added localization support to mod settings and GUI
+  Translation:
+    - Added Russian translations (thank you TheLastEagle!)
+  Other:
+    - Update mod to Factorio version 1.0
+---------------------------------------------------------------------------------------------------
 Version: 1.0.6
 Date: 21. 01. 2020
   Other:
