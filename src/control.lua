@@ -1,6 +1,6 @@
 --control.lua
 
-require("mod-gui")
+local mod_gui = require("mod-gui")
 local channels = require("control.channels")
 
 function get_editor_gui(player)
@@ -9,10 +9,10 @@ function get_editor_gui(player)
 		local editor = mod_gui.get_frame_flow(player).add{
 			type="frame",
 			name="logiNetChannelEditor",
-			caption="Logistic Network Channel",
+            caption={"logiNetChannel.editor_frame_caption"},
 			direction="vertical"
 		}
-		editor.visible = false;
+		editor.visible = false
 		
 		local sliderRow = editor.add{ type="flow", name="sliderRow", caption="Slider Row", direction="horizontal" }
 		sliderRow.style.horizontal_spacing = 12;
@@ -30,20 +30,21 @@ function get_editor_gui(player)
         local labelRow = editor.add{ type="flow", name="labelRow", caption="Label Row", direction="horizontal" }
         labelRow.style.horizontal_spacing = 12;
         
-        labelRow.add{ type="label", name="label", caption="Label: " }
+        labelRow.add{ type="label", name="label", caption={"logiNetChannel.editor_label_caption"} }
+        labelRow.add{ type="label", name="default_label", caption={"logiNetChannel.default_label"}}
         labelRow.add{ type="textfield", name="textfield", lose_focus_on_confirm=true }
-	end
+    end
 	return parent.logiNetChannelEditor
 end
 
 function get_hover_gui(player)
 	local parent = mod_gui.get_frame_flow(player)
-	if not parent.logiNetChannelHover then
-		local hover = mod_gui.get_frame_flow(player).add{
+    if not parent.logiNetChannelHover then
+		local hoverLabel = parent.add{
 			type="label",
 			name="logiNetChannelHover",
-			caption="Logistic Network Channel",
-		}
+			caption={"logiNetChannel.hover_caption_with_label",""},
+        }
 	end
 	return parent.logiNetChannelHover
 end
@@ -55,6 +56,9 @@ function reset_guis(player)
     end
     if parent.logiNetChannelHover then
         parent.logiNetChannelHover.destroy()
+    end
+    if parent.logiNetChannelDefaultLabel then
+        parent.logiNetChannelDefaultLabel.destroy()
     end
 end
 
@@ -132,13 +136,7 @@ end
 
 function get_channel_label(channel_force_name)
     global.channel_labels = global.channel_labels or {}
-    
-    local _, channel = channels.parse_channel_force_name(channel_force_name)
-    if channel and channel > 0 then
-        return global.channel_labels[channel_force_name]
-    end
-    
-    return 'default'
+    return global.channel_labels[channel_force_name] or ''
 end
 
 function set_channel_label(channel_force_name, label)
@@ -146,6 +144,9 @@ function set_channel_label(channel_force_name, label)
     
     local _, channel = channels.parse_channel_force_name(channel_force_name)
     if channel and channel > 0 then
+        if label == '' then
+            label = nil;
+        end
         global.channel_labels[channel_force_name] = label;
     end
 end
@@ -167,22 +168,40 @@ function update_guis(player)
             editor.sliderRow.label.caption = channel
             local base_force_name, _ = channels.parse_channel_force_name(player.opened.force.name)
             local channel_force_name = channels.to_channel_force_name(base_force_name, channel)
-            editor.labelRow.textfield.text = get_channel_label(channel_force_name) or ''
-            editor.labelRow.textfield.enabled = (channel > 0)
+            if channel == 0 then
+                editor.labelRow.default_label.visible = true
+                editor.labelRow.textfield.visible = false
+            else
+                editor.labelRow.textfield.text = get_channel_label(channel_force_name)
+                editor.labelRow.default_label.visible = false
+                editor.labelRow.textfield.visible = true
+            end
         else
             editor.sliderRow.label.caption = '?'
             editor.labelRow.textfield.text = ''
-            editor.labelRow.textfield.enabled = false
+            editor.labelRow.default_label.visible = false
+            editor.labelRow.textfield.visible = false
         end
     end
         
     if show_hover then
-        local caption = "Logistic Network Channel: "..get_channel(player.selected)
-        local label = get_channel_label(player.selected.force.name)
-        if label then
-            caption = caption..' ('..label..')'
+        local channel = get_channel(player.selected)
+        if channel and channel >= 0 then
+            local label
+            if channel == 0 then
+                label = {"logiNetChannel.default_label"}
+            else
+                label = get_channel_label(player.selected.force.name)
+            end
+
+            if label and label ~= '' then
+                hover.caption = {"logiNetChannel.hover_caption_with_label", channel, label}
+            else
+                hover.caption = {"logiNetChannel.hover_caption_with_no_label", channel}
+            end
+        else
+            show_hover = false
         end
-        hover.caption = caption
     end
     
     editor.visible = show_editor
