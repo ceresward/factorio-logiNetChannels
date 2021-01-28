@@ -64,17 +64,17 @@ end
 
 function is_multichannel()
     local channelLimit = global.channelLimit
-	return channelLimit and channelLimit > 1
+	return channelLimit ~= nil and channelLimit > 1
 end
 
 function is_logistics_entity(entity)
     -- Note:  the parameter value MUST be a LuaEntity!  There is no way to safely check the type
     -- of an arbitrary Factorio object, so this must be the caller's responsibility
     function has_logistic_network()
-        return entity and entity.logistic_network
+        return (entity and entity.logistic_network) ~= nil
     end
     function has_logistic_points()
-        return entity and entity.get_logistic_point and #entity.get_logistic_point() > 0;
+        return (entity and entity.get_logistic_point) ~= nil and #entity.get_logistic_point() > 0;
     end
 
     return has_logistic_network() or has_logistic_points()
@@ -130,8 +130,11 @@ function set_channel(entity, channel)
 		game.print("Unable to set entity channel: cannot find player force '"..base_name.."'")
 		return
 	end
-	
-	entity.force = get_or_create_channel_force(base_force, channel)
+    
+    local new_force = get_or_create_channel_force(base_force, channel)
+    if (entity.force ~= new_force) then
+        entity.force = new_force
+    end
 end
 
 function get_channel_label(channel_force_name)
@@ -161,7 +164,7 @@ function update_guis(player)
         show_editor = is_logistics_entity_opened(player)
         show_hover = is_hover_enabled(player) and not show_editor and is_logistics_entity(player.selected)
     end
-    
+
     if show_editor then
         local channel = editor.sliderRow.slider.slider_value
         if channel and channel >= 0 then
