@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.9
+Date: 27. 01. 2021
+  Bugfixes:
+    - Spidertron logistic requests will no longer be cleared all the time (they will still be cleared when changing channels; see mod portal for details)
+---------------------------------------------------------------------------------------------------
 Version: 1.0.8
 Date: 26. 11. 2020
   Other:
