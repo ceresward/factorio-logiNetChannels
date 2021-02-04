@@ -16,10 +16,11 @@ Additional information about how the mod works, features, and limitations can be
 - [ ] Ability to set assigned channel using circuit signals
 
 ### Unscheduled
-- [ ] Ability to change channels by directly entering a number instead of fiddling with the slider
 - [ ] Keep channel force diplomacy (friends/cease-fire) in sync with the main player force diplomacy (possibly as a separate library mod)
 - [ ] Edit/view channel property from the main entity GUI instead of the upper left corner
     - _Blocked: mod API does not yet support modifying base game GUIs_
+- [ ] Save channel information in blueprints (if possible; still investigating)
+- [ ] Ability to change on the fly which channel serves as the default channel, so personal logistics can be served by channels other than channel 0 from time to time
 
 ## Release Notes
 
