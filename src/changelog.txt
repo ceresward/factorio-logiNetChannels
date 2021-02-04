@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.10
+Date: 04. 02. 2021
+  Features:
+    - The channel setting can now also be edited by textfield, as an alternative to the slider
+    - Improved styling of the slider to make it easier to use (a little wider, with notches)
+---------------------------------------------------------------------------------------------------
 Version: 1.0.9
 Date: 27. 01. 2021
   Bugfixes:
