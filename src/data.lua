@@ -10,3 +10,9 @@ default_gui["logiNetChannels_textfield_edit_channel"] = {
     maximal_width = 40,
     font = "default-large-semibold"
 }
+
+default_gui["logiNetChannels_slider_edit_channel"] = {
+    type = "slider_style",
+    parent = "notched_slider",
+    natural_width = 240
+}

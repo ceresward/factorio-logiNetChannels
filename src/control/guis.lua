@@ -16,12 +16,9 @@ function guis.editor_gui(player)
 		local sliderRow = editor.add{ type="flow", name="sliderRow", caption="Slider Row", direction="horizontal" }
 		sliderRow.style.horizontal_spacing = 12;
 		
-        sliderRow.add{ type="label", name="label", caption="0" }
-        sliderRow.label.style.font = "default-large-semibold"
-
         sliderRow.add{
             type="textfield", name="textfield", caption="0",
-            numeric=true, lose_focus_on_confirm=true,
+            numeric=true,
             style="logiNetChannels_textfield_edit_channel"
         }
         
@@ -29,7 +26,8 @@ function guis.editor_gui(player)
 		sliderRow.add{
 			type="slider", name="slider",
 			minimum_value=0, maximum_value=(channelLimit-1), value_step=1,
-			discrete_slider=true, discrete_values=true
+            discrete_slider=true, discrete_values=true,
+            style="logiNetChannels_slider_edit_channel"
 		}
         
         local labelRow = editor.add{ type="flow", name="labelRow", caption="Label Row", direction="horizontal" }
@@ -70,12 +68,16 @@ end
 function guis.update_editor(player, channel, channel_label)
     local editor = guis.editor_gui(player)
     if channel and channel >= 0 then
-        editor.sliderRow.label.caption = channel
-        editor.labelRow.textfield.text = channel_label
+        editor.sliderRow.textfield.caption = channel
+        editor.sliderRow.slider.slider_value = channel
+
+        editor.labelRow.textfield.text = channel_label or ''
         editor.labelRow.default_label.visible = (channel == 0)
         editor.labelRow.textfield.visible = (channel ~= 0)
     else
-        editor.sliderRow.label.caption = '?'
+        editor.sliderRow.textfield.caption = ''
+        editor.sliderRow.slider.slider_value = 0
+
         editor.labelRow.textfield.text = ''
         editor.labelRow.default_label.visible = false
         editor.labelRow.textfield.visible = false
@@ -84,12 +86,10 @@ end
 
 function guis.update_hover(player, channel, channel_label)
     local hover = guis.hover_gui(player)
-    if channel and channel >= 0 then
-        if channel_label and #channel_label > 0 then
-            hover.caption = {"logiNetChannel.hover_caption_with_label", channel, channel_label}
-        else
-            hover.caption = {"logiNetChannel.hover_caption_with_no_label", channel}
-        end
+    if channel_label and #channel_label > 0 then
+        hover.caption = {"logiNetChannel.hover_caption_with_label", channel, channel_label}
+    else
+        hover.caption = {"logiNetChannel.hover_caption_with_no_label", channel}
     end
 end
 

@@ -71,6 +71,16 @@ function set_channel(entity, channel)
     local new_force = get_or_create_channel_force(base_force, channel)
     if (entity.force ~= new_force) then
         entity.force = new_force
+
+        -- Note: in multiplayer, any player may have the entity opened/selected, not just the player that set the channel.
+        --       So it is necessary to check all players to see if they need a GUI update.
+        for _, player in pairs(game.players) do
+            if player.opened == entity and guis.editor_gui(player).visible then
+                update_editor_gui(player, channel)
+            elseif player.selected == entity and guis.hover_gui(player).visible then
+                update_hover_gui(player)
+            end
+        end
     end
 end
 
@@ -91,47 +101,54 @@ function set_channel_label(channel_force_name, label)
     end
 end
 
-function update_guis(player)
+function show_hide_guis(player)
     function is_hover_enabled(player)
         return settings.get_player_settings(player)["logiNetChannels-show-hover"].value
     end
-    
-	local hover = guis.hover_gui(player)
+
+    local hover = guis.hover_gui(player)
 	local editor = guis.editor_gui(player)
     
-    local show_hover = false
-    local show_editor = false
+    local show = nil
     if is_multichannel() then
-        show_editor = is_logistics_entity_opened(player)
-        show_hover = is_hover_enabled(player) and not show_editor and is_logistics_entity(player.selected)
+        if is_logistics_entity_opened(player) then
+            show = "editor"
+        elseif is_hover_enabled(player) and is_logistics_entity(player.selected) then
+            show = "hover"
+        end
     end
 
-    if show_editor then
-        local channel = editor.sliderRow.slider.slider_value
-        local channel_label = ''
-        if channel and channel >= 0 then
-            local base_force_name, _ = channels.parse_force_name(player.opened.force.name)
-            local channel_force_name = channels.to_force_name(base_force_name, channel)
-            channel_label = get_channel_label(channel_force_name)
-        end
-        guis.update_editor(player, channel, channel_label)
+    if show == "editor" and not editor.visible then
+        editor.sliderRow.slider.set_slider_minimum_maximum(0, global.channelLimit - 1)
+        update_editor_gui(player, get_channel(player.opened))
+    elseif show == "hover" then
+        update_hover_gui(player)
     end
-        
-    if show_hover then
-        local channel = get_channel(player.selected)
-        if channel and channel >= 0 then
-            local channel_label = {"logiNetChannel.default_label"}
-            if (channel > 0) then
-                channel_label = get_channel_label(player.selected.force.name)
-            end
-            guis.update_hover(player, channel, channel_label)
-        else
-            show_hover = false
-        end
+
+    editor.visible = (show == "editor")
+    hover.visible = (show == "hover")
+end
+
+function update_editor_gui(player, channel)
+    if channel and channel > 0 then
+        local base_force_name, _ = channels.parse_force_name(player.opened.force.name)
+        local channel_force_name = channels.to_force_name(base_force_name, channel)
+        guis.update_editor(player, channel, get_channel_label(channel_force_name))
+    else
+        -- Note: channel_label can be nil; it isn't used for the default channel
+        guis.update_editor(player, 0, nil)
     end
-    
-    editor.visible = show_editor
-    hover.visible = show_hover
+end
+
+function update_hover_gui(player)
+    local channel_force_name = player.selected.force.name
+    local _, channel = channels.parse_force_name(channel_force_name)
+
+    if channel and channel > 0 then
+        guis.update_hover(player, channel, get_channel_label(channel_force_name))
+    else
+        guis.update_hover(player, 0, {"logiNetChannel.default_label"})
+    end
 end
 
 function syncChannelLimit()
@@ -212,15 +229,26 @@ script.on_event(defines.events.on_runtime_mod_setting_changed,
 )
 
 script.on_event(defines.events.on_gui_value_changed,
-	function(event)
-		local player = game.get_player(event.player_index)
-		local editor = guis.editor_gui(player);
+    function(event)
+        local player = game.get_player(event.player_index)
+        local editor = guis.editor_gui(player);
         
-        if editor.sliderRow.slider == event.element then
-            update_guis(player)
-		end
-        
+        if event.element == editor.sliderRow.slider and editor.visible then
+            local channel = editor.sliderRow.slider.slider_value
+            update_editor_gui(player, channel)
+        end
 	end
+)
+
+script.on_event(defines.events.on_gui_confirmed,
+    function(event)
+        local player = game.get_player(event.player_index)
+        local editor = guis.editor_gui(player);
+        if event.element == editor.sliderRow.textfield and editor.visible then
+            local channel = channels.parse_nearest_channel(editor.sliderRow.textfield.text)
+            update_editor_gui(player, channel)
+        end
+    end
 )
 
 script.on_event(defines.events.on_gui_text_changed,
@@ -228,12 +256,12 @@ script.on_event(defines.events.on_gui_text_changed,
         local player = game.get_player(event.player_index)
 		local editor = guis.editor_gui(player);
         
-        if editor.labelRow.textfield == event.element and is_logistics_entity_opened(player) then
+        if event.element == editor.labelRow.textfield and is_logistics_entity_opened(player) then
             local channel = editor.sliderRow.slider.slider_value
             local base_force_name, _ = channels.parse_force_name(player.opened.force.name)
             local channel_force_name = channels.to_force_name(base_force_name, channel)
             set_channel_label(channel_force_name, editor.labelRow.textfield.text)
-            update_guis(player)
+            update_editor_gui(player, channel)
         end
     end
 )
@@ -244,12 +272,9 @@ script.on_event(defines.events.on_gui_opened,
 		if is_multichannel() and is_logistics_entity(entity) then
 			local player = game.get_player(event.player_index)
 			local editor = guis.editor_gui(player)
-            local channel = get_channel(entity);
+            local channel = get_channel(entity)
             
-            editor.sliderRow.slider.set_slider_minimum_maximum(0, global.channelLimit - 1)
-			editor.sliderRow.slider.slider_value = channel
-			
-			update_guis(player)
+            show_hide_guis(player)
 		end
 	end
 )
@@ -264,7 +289,7 @@ script.on_event(defines.events.on_gui_closed,
 			local channel = editor.sliderRow.slider.slider_value;
 			set_channel(entity, channel)
 			
-			update_guis(player)
+			show_hide_guis(player)
 		end
 	end
 )
@@ -273,14 +298,11 @@ script.on_event(defines.events.on_entity_settings_pasted,
 	function(event)
 		local source = event.source;
 		local destination = event.destination;
-		if is_multichannel() and is_logistics_entity(source) and is_logistics_entity(destination)
-		then
+		if is_multichannel() and is_logistics_entity(source) and is_logistics_entity(destination) then
 			local player = game.get_player(event.player_index)
 			
-			local channel = get_channel(source);
+            local channel = get_channel(source)
 			set_channel(destination, channel)
-			
-			update_guis(player)
 		end
 	end
 )
@@ -290,7 +312,7 @@ script.on_event(defines.events.on_selected_entity_changed,
         if is_multichannel() then
             local player = game.get_player(event.player_index)
             local entity = player.selected
-            update_guis(player)
+            show_hide_guis(player)
         end
 	end
 )
