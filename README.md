@@ -14,6 +14,7 @@ Additional information about how the mod works, features, and limitations can be
 ### 1.2
 - [ ] Optional feature: unlock channels through research
 - [ ] Ability to set assigned channel using circuit signals
+- [ ] Channel changer:  set channels using a selection tool, similar to upgrade planner
 
 ### Unscheduled
 - [ ] Keep channel force diplomacy (friends/cease-fire) in sync with the main player force diplomacy (possibly as a separate library mod)
