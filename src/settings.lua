@@ -1,4 +1,4 @@
--- settings.lua
+-- settings.lua 
 
 data:extend({
     {
@@ -14,5 +14,11 @@ data:extend({
 		name = "logiNetChannels-show-hover",
         type = "bool-setting",
         default_value = true
+    },
+    {
+        setting_type = "startup",
+		name = "logiNetChannels-require-research",
+        type = "bool-setting",
+        default_value = false
     },
 })
