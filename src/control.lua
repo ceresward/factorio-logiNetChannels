@@ -5,7 +5,12 @@ local channels = require("control.channels")
 
 function is_multichannel()
     local channelLimit = global.channelLimit
-	return channelLimit ~= nil and channelLimit > 1
+    return channelLimit ~= nil and channelLimit > 1
+end
+
+function is_researched()
+    -- TODO: implement real logic
+    return true
 end
 
 function is_logistics_entity(entity)
@@ -30,43 +35,43 @@ end
 
 function get_channel_force(base_force, channel)
     if not channel or channel == 0 then
-		return base_force
-	else
+        return base_force
+    else
         local channel_force_name = channels.to_force_name(base_force.name, channel)
         return game.forces[channel_force_name]
     end
 end
 
 function get_or_create_channel_force(base_force, channel)
-	if not channel or channel == 0 then
-		return base_force
-	else
-		local channel_force_name = channels.to_force_name(base_force.name, channel)
-		if not game.forces[channel_force_name] then
-			local channel_force = game.create_force(channel_force_name)
-			channel_force.set_friend(base_force, true)
-			channel_force.set_cease_fire(base_force, true)
-			base_force.set_friend(channel_force, true)
-			base_force.set_cease_fire(channel_force, true)
+    if not channel or channel == 0 then
+        return base_force
+    else
+        local channel_force_name = channels.to_force_name(base_force.name, channel)
+        if not game.forces[channel_force_name] then
+            local channel_force = game.create_force(channel_force_name)
+            channel_force.set_friend(base_force, true)
+            channel_force.set_cease_fire(base_force, true)
+            base_force.set_friend(channel_force, true)
+            base_force.set_cease_fire(channel_force, true)
             syncAllTechToChannel(base_force, channel)
-		end
-		return game.forces[channel_force_name]
-	end
+        end
+        return game.forces[channel_force_name]
+    end
 end
 
 function get_channel(entity)
     local _, channel = channels.parse_force_name(entity.force.name)
-	return channel or 0
+    return channel or 0
 end
 
 function set_channel(entity, channel)
-	local base_name, _ = channels.parse_force_name(entity.force.name)
-	local base_force = game.forces[base_name]
-	if not base_force then
-		-- TODO: do something better...
-		game.print("Unable to set entity channel: cannot find player force '"..base_name.."'")
-		return
-	end
+    local base_name, _ = channels.parse_force_name(entity.force.name)
+    local base_force = game.forces[base_name]
+    if not base_force then
+        -- TODO: do something better...
+        game.print("Unable to set entity channel: cannot find player force '"..base_name.."'")
+        return
+    end
     
     local new_force = get_or_create_channel_force(base_force, channel)
     if (entity.force ~= new_force) then
@@ -107,22 +112,22 @@ function show_hide_guis(player)
     end
 
     local hover = guis.hover_gui(player)
-	local editor = guis.editor_gui(player)
+    local editor = guis.editor_gui(player)
     
     local show = nil
-    if is_multichannel() then
+    if is_researched() and is_multichannel() then
         if is_logistics_entity_opened(player) then
             show = "editor"
         elseif is_hover_enabled(player) and is_logistics_entity(player.selected) then
             show = "hover"
         end
-    end
-
-    if show == "editor" and not editor.visible then
-        editor.sliderRow.slider.set_slider_minimum_maximum(0, global.channelLimit - 1)
-        update_editor_gui(player, get_channel(player.opened))
-    elseif show == "hover" then
-        update_hover_gui(player)
+        
+        if show == "editor" and not editor.visible then
+            editor.sliderRow.slider.set_slider_minimum_maximum(0, global.channelLimit - 1)
+            update_editor_gui(player, get_channel(player.opened))
+        elseif show == "hover" then
+            update_hover_gui(player)
+        end
     end
 
     editor.visible = (show == "editor")
@@ -152,29 +157,29 @@ function update_hover_gui(player)
 end
 
 function syncChannelLimit()
-	local currentLimit = global.channelLimit
-	local newLimit = settings.global["logiNetChannelLimit"].value;
+    local currentLimit = global.channelLimit
+    local newLimit = settings.global["logiNetChannelLimit"].value;
     
     if (currentLimit ~= newLimit) then
         game.print("[Logistic Network Channels] Channel limit changing from "..tostring(currentLimit).." to "..
             tostring(newLimit));
     end
         
-	if currentLimit and currentLimit > newLimit then
+    if currentLimit and currentLimit > newLimit then
         local mergedForceCount = 0
-		for name,force in pairs(game.forces) do
-			local baseName, channel = channels.parse_force_name(name)
-			if channel and channel >= newLimit then
-				game.merge_forces(name, baseName)
+        for name,force in pairs(game.forces) do
+            local baseName, channel = channels.parse_force_name(name)
+            if channel and channel >= newLimit then
+                game.merge_forces(name, baseName)
                 mergedForceCount = mergedForceCount + 1
-			end
-		end
+            end
+        end
         
         if mergedForceCount > 0 then
             game.print("[Logistic Network Channels] Warning!  Channel limit has been reduced, "..mergedForceCount..
                 " channels above the new limit have been merged back into channel 0.")
         end
-	end
+    end
     
     global.channelLimit = newLimit;
 end
@@ -228,12 +233,12 @@ script.on_configuration_changed(
 )
 
 script.on_event(defines.events.on_runtime_mod_setting_changed,
-	function(event)
-		if event.setting == "logiNetChannelLimit" then
+    function(event)
+        if event.setting == "logiNetChannelLimit" then
             -- game.print("on_runtime_mod_setting_changed")
-			syncChannelLimit()
-		end
-	end
+            syncChannelLimit()
+        end
+    end
 )
 
 script.on_event(defines.events.on_gui_value_changed,
@@ -245,7 +250,7 @@ script.on_event(defines.events.on_gui_value_changed,
             local channel = editor.sliderRow.slider.slider_value
             update_editor_gui(player, channel)
         end
-	end
+    end
 )
 
 script.on_event(defines.events.on_gui_confirmed,
@@ -262,7 +267,7 @@ script.on_event(defines.events.on_gui_confirmed,
 script.on_event(defines.events.on_gui_text_changed,
     function(event)
         local player = game.get_player(event.player_index)
-		local editor = guis.editor_gui(player);
+        local editor = guis.editor_gui(player);
         
         if event.element == editor.labelRow.textfield and is_logistics_entity_opened(player) then
             local channel = editor.sliderRow.slider.slider_value
@@ -275,54 +280,60 @@ script.on_event(defines.events.on_gui_text_changed,
 )
 
 script.on_event(defines.events.on_gui_opened,
-	function(event)
-		local entity = event.entity
-		if is_multichannel() and is_logistics_entity(entity) then
-			local player = game.get_player(event.player_index)
-			local editor = guis.editor_gui(player)
-            local channel = get_channel(entity)
-            
-            show_hide_guis(player)
-		end
-	end
+    function(event)
+        if is_researched() and is_multichannel() then
+            local entity = event.entity
+            if is_logistics_entity(entity) then
+                local player = game.get_player(event.player_index)
+                local editor = guis.editor_gui(player)
+                local channel = get_channel(entity)
+                
+                show_hide_guis(player)
+            end
+        end
+    end
 )
 
 script.on_event(defines.events.on_gui_closed,
-	function(event)
-        local entity = event.entity
-		if is_multichannel() and is_logistics_entity(entity) then
-			local player = game.get_player(event.player_index)
-			local editor = guis.editor_gui(player);
-			
-			local channel = editor.sliderRow.slider.slider_value;
-			set_channel(entity, channel)
-			
-			show_hide_guis(player)
-		end
-	end
+    function(event)
+        if is_researched() and is_multichannel() then
+            local entity = event.entity
+            if is_logistics_entity(entity) then
+                local player = game.get_player(event.player_index)
+                local editor = guis.editor_gui(player);
+                
+                local channel = editor.sliderRow.slider.slider_value;
+                set_channel(entity, channel)
+                
+                show_hide_guis(player)
+            end
+        end
+    end
 )
 
 script.on_event(defines.events.on_entity_settings_pasted,
-	function(event)
-		local source = event.source;
-		local destination = event.destination;
-		if is_multichannel() and is_logistics_entity(source) and is_logistics_entity(destination) then
-			local player = game.get_player(event.player_index)
-			
-            local channel = get_channel(source)
-			set_channel(destination, channel)
-		end
-	end
+    function(event)
+        if is_researched() and is_multichannel() then
+            local source = event.source;
+            local destination = event.destination;
+            if is_logistics_entity(source) and is_logistics_entity(destination) then
+                local player = game.get_player(event.player_index)
+                
+                local channel = get_channel(source)
+                set_channel(destination, channel)
+            end
+        end
+    end
 )
 
 script.on_event(defines.events.on_selected_entity_changed,
-	function(event)
-        if is_multichannel() then
+    function(event)
+        if is_researched() and is_multichannel() then
             local player = game.get_player(event.player_index)
             local entity = player.selected
             show_hide_guis(player)
         end
-	end
+    end
 )
 
 script.on_event(defines.events.on_research_finished,
