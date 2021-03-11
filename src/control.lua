@@ -10,6 +10,7 @@ end
 
 function is_researched()
     -- TODO: implement real logic
+    --   Pseudologic:  return (NOT tech.enabled) OR tech.researched
     return true
 end
 
@@ -177,7 +178,7 @@ function syncChannelLimit()
         
         if mergedForceCount > 0 then
             game.print("[Logistic Network Channels] Warning!  Channel limit has been reduced, "..mergedForceCount..
-                " channels above the new limit have been merged back into channel 0.")
+                " channels above the new limit have been merged into the default channel.")
         end
     end
     
@@ -216,12 +217,20 @@ function syncAllTechToChannels(base_force)
     end
 end
 
+
+-----------------------------------------------------------
+--  [EVENTS]                                             --
+-----------------------------------------------------------
+
 script.on_init(syncChannelLimit)
+
 script.on_configuration_changed(
     function(data)
         -- game.print("on_configuration_changed: ".. serpent.block(data))
         syncChannelLimit()
         for name, force in pairs(game.forces) do
+            -- TODO: enable/disable channel tech based on mod setting
+
             if not channels.is_channel_force_name(force.name) then
                 syncAllTechToChannels(force)
             end
