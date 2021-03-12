@@ -3,35 +3,36 @@
 local guis = require("control.guis")
 local channels = require("control.channels")
 
-function is_multichannel()
+function is_map_multichannel()
     local channelLimit = global.channelLimit
     return channelLimit ~= nil and channelLimit > 1
 end
 
-function is_researched()
-    -- TODO: implement real logic
-    --   Pseudologic:  return (NOT tech.enabled) OR tech.researched
-    return true
+function has_logistic_channels(entity)
+    function is_channel_tech_researched(force)
+        -- Channel tech is considered to be researched for the purposes of mod features if it is disabled
+        local channelTech = force.technologies["logistic-channels"]
+        return (not channelTech.enabled) or channelTech.researched
+    end
+    
+    function is_logistics_entity(entity)
+        -- Note:  the parameter value MUST be a LuaEntity!  There is no way to safely check the type
+        -- of an arbitrary Factorio object, so this must be the caller's responsibility
+        function has_logistic_network()
+            return (entity and entity.logistic_network) ~= nil
+        end
+        function has_logistic_points()
+            return (entity and entity.get_logistic_point) ~= nil and #entity.get_logistic_point() > 0;
+        end
+    
+        return has_logistic_network() or has_logistic_points()
+    end
+
+    return entity and is_channel_tech_researched(entity.force) and is_logistics_entity(entity)
 end
 
-function is_logistics_entity(entity)
-    -- Note:  the parameter value MUST be a LuaEntity!  There is no way to safely check the type
-    -- of an arbitrary Factorio object, so this must be the caller's responsibility
-    function has_logistic_network()
-        return (entity and entity.logistic_network) ~= nil
-    end
-    function has_logistic_points()
-        return (entity and entity.get_logistic_point) ~= nil and #entity.get_logistic_point() > 0;
-    end
-
-    return has_logistic_network() or has_logistic_points()
-end
-
-function is_logistics_entity_opened(player)
-    function is_entity_opened()
-        return player.opened_gui_type == defines.gui_type.entity
-    end
-    return is_entity_opened() and is_logistics_entity(player.opened)
+function has_entity_opened(player)
+    return player.opened_gui_type == defines.gui_type.entity
 end
 
 function get_channel_force(base_force, channel)
@@ -116,10 +117,10 @@ function show_hide_guis(player)
     local editor = guis.editor_gui(player)
     
     local show = nil
-    if is_researched() and is_multichannel() then
-        if is_logistics_entity_opened(player) then
+    if is_map_multichannel() then
+        if has_entity_opened(player) and has_logistic_channels(player.opened) then
             show = "editor"
-        elseif is_hover_enabled(player) and is_logistics_entity(player.selected) then
+        elseif is_hover_enabled(player) and has_logistic_channels(player.selected) then
             show = "hover"
         end
         
@@ -192,7 +193,7 @@ function syncTech(srcTech, destTech)
     destTech.visible_when_disabled = srcTech.visible_when_disabled;
     destTech.level = srcTech.level;
 end
-    
+
 function syncSingleTechToChannels(technology)
     for channel = 1,global.channelLimit do
         local channel_force = get_channel_force(technology.force, channel)
@@ -215,6 +216,17 @@ function syncAllTechToChannels(base_force)
     for channel = 1,global.channelLimit do
         syncAllTechToChannel(base_force, channel)
     end
+
+end
+
+function syncChannelTechEnabled()
+    -- Enable/disable channel tech based on mod startup setting.  Disabling channel tech removes
+    -- it from the research screen.  Mod features will always be enabled if the tech is disabled
+
+    for name, force in pairs(game.forces) do
+        local channelTech = force.technologies["logistic-channels"]
+        channelTech.enabled = settings.startup["logiNetChannels-require-research"].value
+    end
 end
 
 
@@ -222,19 +234,54 @@ end
 --  [EVENTS]                                             --
 -----------------------------------------------------------
 
-script.on_init(syncChannelLimit)
+script.on_init(
+    function()
+        syncChannelLimit()
+        syncChannelTechEnabled()
+    end
+)
 
 script.on_configuration_changed(
     function(data)
         -- game.print("on_configuration_changed: ".. serpent.block(data))
+        
         syncChannelLimit()
+        syncChannelTechEnabled()
+        
+        -- Sync channel tech during mod upgrade:
+        --   When loading a map that was using a pre-tech version of the mod, auto-research the
+        --   tech if its prerequisites are already researched (but only when research is enabled!)
+        local mod_changes = data.mod_changes["LogiNetChannels"]
+        local mod_old_version = mod_changes and mod_changes.old_version
+        local is_pretech_upgrade =  mod_old_version and mod_old_version:find("^1.0") ~= nil
+        if is_pretech_upgrade then
+            -- game.print("[LogiNetChannels] Detected pre-tech previous mod version: " .. mod_old_version)
+            log("[LogiNetChannels] Detected pre-tech previous mod version: " .. mod_old_version)
+            for name, force in pairs(game.forces) do
+                local channelTech = force.technologies["logistic-channels"]
+                -- game.print("[LogiNetChannels] Channel tech enabled? " .. tostring(channelTech.enabled))
+                log("[LogiNetChannels] ".. force.name ..": channel tech enabled? " .. tostring(channelTech.enabled))
+                if channelTech.enabled then
+                    local allPrereqsResearched = true
+                    for _, prereq in pairs(channelTech.prerequisites) do
+                        allPrereqsResearched = allPrereqsResearched and prereq.researched
+                    end
+                    -- game.print("[LogiNetChannels] " .. force.name .. ": channel tech prereqs already researched?  " .. tostring(allPrereqsResearched))
+                    log("[LogiNetChannels] " .. force.name .. ": channel tech prereqs already researched?  " .. tostring(allPrereqsResearched))
+                    if allPrereqsResearched then
+                        channelTech.researched = true
+                    end
+                end
+            end
+        end
+        
         for name, force in pairs(game.forces) do
-            -- TODO: enable/disable channel tech based on mod setting
-
+            -- Check if the force is a channel force, and if so, sync tech from the main force...just in case
             if not channels.is_channel_force_name(force.name) then
                 syncAllTechToChannels(force)
             end
         end
+
         for name, player in pairs(game.players) do
             guis.reset_guis(player)
         end
@@ -273,26 +320,11 @@ script.on_event(defines.events.on_gui_confirmed,
     end
 )
 
-script.on_event(defines.events.on_gui_text_changed,
-    function(event)
-        local player = game.get_player(event.player_index)
-        local editor = guis.editor_gui(player);
-        
-        if event.element == editor.labelRow.textfield and is_logistics_entity_opened(player) then
-            local channel = editor.sliderRow.slider.slider_value
-            local base_force_name, _ = channels.parse_force_name(player.opened.force.name)
-            local channel_force_name = channels.to_force_name(base_force_name, channel)
-            set_channel_label(channel_force_name, editor.labelRow.textfield.text)
-            update_editor_gui(player, channel)
-        end
-    end
-)
-
 script.on_event(defines.events.on_gui_opened,
     function(event)
-        if is_researched() and is_multichannel() then
+        if is_map_multichannel() then
             local entity = event.entity
-            if is_logistics_entity(entity) then
+            if has_logistic_channels(entity) then
                 local player = game.get_player(event.player_index)
                 local editor = guis.editor_gui(player)
                 local channel = get_channel(entity)
@@ -305,14 +337,21 @@ script.on_event(defines.events.on_gui_opened,
 
 script.on_event(defines.events.on_gui_closed,
     function(event)
-        if is_researched() and is_multichannel() then
+        if is_map_multichannel() then
             local entity = event.entity
-            if is_logistics_entity(entity) then
+            if has_logistic_channels(entity) then
                 local player = game.get_player(event.player_index)
                 local editor = guis.editor_gui(player);
                 
-                local channel = editor.sliderRow.slider.slider_value;
+                -- Apply new channel setting
+                local channel = editor.sliderRow.slider.slider_value
                 set_channel(entity, channel)
+
+                -- Apply new channel label setting
+                local label = editor.labelRow.textfield.text
+                local base_force_name, _ = channels.parse_force_name(entity.force.name)
+                local channel_force_name = channels.to_force_name(base_force_name, channel)
+                set_channel_label(channel_force_name, label)
                 
                 show_hide_guis(player)
             end
@@ -322,10 +361,10 @@ script.on_event(defines.events.on_gui_closed,
 
 script.on_event(defines.events.on_entity_settings_pasted,
     function(event)
-        if is_researched() and is_multichannel() then
+        if is_map_multichannel() then
             local source = event.source;
             local destination = event.destination;
-            if is_logistics_entity(source) and is_logistics_entity(destination) then
+            if has_logistic_channels(source) and has_logistic_channels(destination) then
                 local player = game.get_player(event.player_index)
                 
                 local channel = get_channel(source)
@@ -337,7 +376,7 @@ script.on_event(defines.events.on_entity_settings_pasted,
 
 script.on_event(defines.events.on_selected_entity_changed,
     function(event)
-        if is_researched() and is_multichannel() then
+        if is_map_multichannel() then
             local player = game.get_player(event.player_index)
             local entity = player.selected
             show_hide_guis(player)
@@ -347,7 +386,7 @@ script.on_event(defines.events.on_selected_entity_changed,
 
 script.on_event(defines.events.on_research_finished,
     function(event)
-        if is_multichannel() then
+        if is_map_multichannel() then
             syncSingleTechToChannels(event.research)
         end
     end
