@@ -1,5 +1,10 @@
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.10
+Date: 13. 03. 2021
+  Bugfixes:
+    - Channel forces will now properly track researched tech level for infinite research (e.g. robot speed)
+---------------------------------------------------------------------------------------------------
+Version: 1.0.10
 Date: 04. 02. 2021
   Features:
     - The channel setting can now also be edited by textfield, as an alternative to the slider
