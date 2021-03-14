@@ -19,6 +19,7 @@ default_gui["logiNetChannels_slider_edit_channel"] = {
 
 
 -- Technology prototypes
+-- TODO: try loading mod w/ various overhaul mods; will the tech prereqs cause any problems?
 data:extend({
     {
         type = "technology",
@@ -45,3 +46,35 @@ data:extend({
         --order = "c-k-d"
     }
 })
+
+
+-- Channel changer tool
+local channelChanger = table.deepcopy(data.raw["selection-tool"]["selection-tool"])
+-- TODO: create custom icon
+--channelChanger.icon = "__FriendBlueprints__/graphics/icons/friends-blueprint.png"
+--channelChanger.icon_size = 32
+channelChanger.name = "logistic-channel-changer"
+channelChanger.selection_mode = {"any-entity","friend"}
+channelChanger.entity_filter_mode = "whitelist"
+channelChanger.entity_type_filters = {"roboport","logistic-container","spider-vehicle"}
+table.insert(channelChanger.flags, "only-in-cursor")
+table.insert(channelChanger.flags, "draw-logistic-overlay")
+
+local channelChangerShortcut = {
+    name = "give-logistic-channel-changer",
+    type = "shortcut",
+    action = "spawn-item",
+    item_to_spawn = "logistic-channel-changer",
+    -- TODO: create custom icons
+    icon = table.deepcopy(data.raw["shortcut"]["give-blueprint"].icon),
+    disabled_icon = table.deepcopy(data.raw["shortcut"]["give-blueprint"].disabled_icon),
+    small_icon = table.deepcopy(data.raw["shortcut"]["give-blueprint"].small_icon),
+    disabled_small_icon = table.deepcopy(data.raw["shortcut"]["give-blueprint"].disabled_small_icon),
+    style = "green",
+    technology_to_unlock = "logistic-channels",
+}
+
+data:extend{
+    channelChanger,
+    channelChangerShortcut
+}

@@ -67,26 +67,40 @@ function get_channel(entity)
 end
 
 function set_channel(entity, channel)
-    local base_name, _ = channels.parse_force_name(entity.force.name)
-    local base_force = game.forces[base_name]
-    if not base_force then
-        -- TODO: do something better...
-        game.print("Unable to set entity channel: cannot find player force '"..base_name.."'")
-        return
-    end
-    
-    local new_force = get_or_create_channel_force(base_force, channel)
-    if (entity.force ~= new_force) then
-        entity.force = new_force
+    set_channels({entity}, channel)
+end
 
-        -- Note: in multiplayer, any player may have the entity opened/selected, not just the player that set the channel.
-        --       So it is necessary to check all players to see if they need a GUI update.
-        for _, player in pairs(game.players) do
-            if player.opened == entity and guis.editor_gui(player).visible then
-                update_editor_gui(player, channel)
-            elseif player.selected == entity and guis.hover_gui(player).visible then
-                update_hover_gui(player)
+function set_channels(entities, channel)
+    local baseForceCache = {}
+    local newForceCache = {}
+
+    for _, entity in pairs(entities) do
+        local base_force = baseForceCache[entity.force]
+        if not base_force then
+            local base_force_name, _ = channels.parse_force_name(entity.force.name)
+            base_force = game.forces[base_force_name]
+            if not base_force then
+                -- TODO: do something better...
+                game.print("Unable to set entity channel: cannot find player force '"..base_name.."'")
+                return
             end
+            baseForceCache[entity.force] = base_force
+        end
+
+        local new_force = newForceCache[base_force]
+        if not new_force then
+            new_force = get_or_create_channel_force(base_force, channel)
+            newForceCache[base_force] = new_force
+        end
+
+        if (entity.force ~= new_force) then
+            entity.force = new_force
+        end
+    end
+
+    for _, player in pairs(game.players) do
+        if guis.hover_gui(player).visible then
+            update_hover_gui(player)
         end
     end
 end
@@ -112,14 +126,21 @@ function show_hide_guis(player)
     function is_hover_enabled(player)
         return settings.get_player_settings(player)["logiNetChannels-show-hover"].value
     end
+    function is_holding_changer(player)
+        return player.cursor_stack and player.cursor_stack.valid_for_read
+            and player.cursor_stack.name == "logistic-channel-changer"
+    end
 
     local hover = guis.hover_gui(player)
     local editor = guis.editor_gui(player)
+    local changer = guis.changer_gui(player)
     
     local show = nil
     if is_map_multichannel() then
         if has_entity_opened(player) and has_logistic_channels(player.opened) then
             show = "editor"
+        elseif is_holding_changer(player) then
+            show = "changer"
         elseif is_hover_enabled(player) and has_logistic_channels(player.selected) then
             show = "hover"
         end
@@ -127,6 +148,8 @@ function show_hide_guis(player)
         if show == "editor" and not editor.visible then
             editor.sliderRow.slider.set_slider_minimum_maximum(0, global.channelLimit - 1)
             update_editor_gui(player, get_channel(player.opened))
+        elseif show == "changer" and not changer.visible then
+            update_changer_gui(player, changer.sliderRow.slider.slider_value)
         elseif show == "hover" then
             update_hover_gui(player)
         end
@@ -134,6 +157,7 @@ function show_hide_guis(player)
 
     editor.visible = (show == "editor")
     hover.visible = (show == "hover")
+    changer.visible = (show == "changer")
 end
 
 function update_editor_gui(player, channel)
@@ -155,6 +179,16 @@ function update_hover_gui(player)
         guis.update_hover(player, channel, get_channel_label(channel_force_name))
     else
         guis.update_hover(player, 0, {"logiNetChannel.default_label"})
+    end
+end
+
+function update_changer_gui(player, channel)
+    if channel and channel > 0 then
+        local channel_force_name = channels.to_force_name(player.force.name, channel)
+        guis.update_changer(player, channel, get_channel_label(channel_force_name))
+    else
+        -- Note: channel_label can be nil; it isn't used for the default channel
+        guis.update_changer(player, 0, nil)
     end
 end
 
@@ -225,6 +259,17 @@ function syncChannelTechEnabled()
 
     for name, force in pairs(game.forces) do
         local channelTech = force.technologies["logistic-channels"]
+        local enable_research = settings.startup["logiNetChannels-require-research"].value
+
+        if enable_research then
+            channelTech.enabled = true
+        else
+            -- This is a small hack to deal with the tech unlock for channel changer shortcuts. If
+            -- a player hasn't unlocked the shortcut yet, and joins a map with tech disabled, they
+            -- won't be able to use the shortcut at all.  Hack is
+            channelTech.researched = true
+            channelTech.enabled = false
+        end
         channelTech.enabled = settings.startup["logiNetChannels-require-research"].value
     end
 end
@@ -300,11 +345,17 @@ script.on_event(defines.events.on_runtime_mod_setting_changed,
 script.on_event(defines.events.on_gui_value_changed,
     function(event)
         local player = game.get_player(event.player_index)
+
         local editor = guis.editor_gui(player);
-        
-        if event.element == editor.sliderRow.slider and editor.visible then
+        if editor.visible and event.element == editor.sliderRow.slider then
             local channel = editor.sliderRow.slider.slider_value
             update_editor_gui(player, channel)
+        end
+
+        local changer = guis.changer_gui(player);
+        if changer.visible and event.element == changer.sliderRow.slider then
+            local channel = changer.sliderRow.slider.slider_value
+            update_changer_gui(player, channel)
         end
     end
 )
@@ -312,11 +363,25 @@ script.on_event(defines.events.on_gui_value_changed,
 script.on_event(defines.events.on_gui_confirmed,
     function(event)
         local player = game.get_player(event.player_index)
+
         local editor = guis.editor_gui(player);
-        if event.element == editor.sliderRow.textfield and editor.visible then
+        if editor.visible and event.element == editor.sliderRow.textfield then
             local channel = channels.parse_nearest_channel(editor.sliderRow.textfield.text)
             update_editor_gui(player, channel)
         end
+
+        local changer = guis.changer_gui(player);
+        if changer.visible and event.element == changer.sliderRow.textfield then
+            local channel = channels.parse_nearest_channel(changer.sliderRow.textfield.text)
+            update_changer_gui(player, channel)
+        end
+    end
+)
+
+script.on_event(defines.events.on_player_cursor_stack_changed,
+    function(event)
+        local player = game.get_player(event.player_index)
+        show_hide_guis(player)
     end
 )
 
@@ -337,9 +402,9 @@ script.on_event(defines.events.on_gui_opened,
 
 script.on_event(defines.events.on_gui_closed,
     function(event)
-        if is_map_multichannel() then
+        if event.gui_type == defines.gui_type.entity and is_map_multichannel() then
             local entity = event.entity
-            if has_logistic_channels(entity) then
+            if entity and has_logistic_channels(entity) then
                 local player = game.get_player(event.player_index)
                 local editor = guis.editor_gui(player);
                 
@@ -388,6 +453,34 @@ script.on_event(defines.events.on_research_finished,
     function(event)
         if is_map_multichannel() then
             syncSingleTechToChannels(event.research)
+        end
+    end
+)
+
+script.on_event(defines.events.on_mod_item_opened,
+    function(event)
+        game.print("on_mod_item_opened")
+        if event.item.name == 'logistic-channel-changer' then
+            game.print("logistic-channel-changer: item opened")
+        end
+    end
+)
+
+script.on_event(defines.events.on_player_selected_area,
+    function(event)
+        -- Note: can add check for #event.entities > 0 for actual implementation
+        if event.item == 'logistic-channel-changer' then
+            game.print("logistic-channel-changer: area selected")
+        end
+        if event.item == 'logistic-channel-changer' and #event.entities > 0 then
+            local player = game.get_player(event.player_index)
+            local channel = guis.changer_gui(player).sliderRow.slider.slider_value
+            game.print("logistic-channel-changer: updating "..tostring(#event.entities).." entities to channel "..channel)
+            
+            set_channels(event.entities, channel)
+            -- for _, entity in pairs(event.entities) do
+            --     set_channel(entity, channel)
+            -- end
         end
     end
 )
