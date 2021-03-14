@@ -1,5 +1,10 @@
 ---------------------------------------------------------------------------------------------------
-Version: 1.0.10
+Version: 1.0.12
+Date: 13. 03. 2021
+  Other:
+    - Fixed a dumb mistake with the 1.0.11 changelog
+---------------------------------------------------------------------------------------------------
+Version: 1.0.11
 Date: 13. 03. 2021
   Bugfixes:
     - Channel forces will now properly track researched tech level for infinite research (e.g. robot speed)
