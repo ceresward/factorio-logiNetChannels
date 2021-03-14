@@ -179,11 +179,19 @@ function syncChannelLimit()
     global.channelLimit = newLimit;
 end
 
+-- Syncs all writeable properties from srcTech into destTech
+function syncTech(srcTech, destTech)
+    destTech.researched = srcTech.researched
+    destTech.enabled = srcTech.enabled;
+    destTech.visible_when_disabled = srcTech.visible_when_disabled;
+    destTech.level = srcTech.level;
+end
+    
 function syncSingleTechToChannels(technology)
     for channel = 1,global.channelLimit do
         local channel_force = get_channel_force(technology.force, channel)
         if channel_force then
-            channel_force.technologies[technology.name].researched = technology.researched
+            syncTech(technology, channel_force.technologies[technology.name])
         end
     end
 end
@@ -192,7 +200,7 @@ function syncAllTechToChannel(base_force, channel)
     local channel_force = get_channel_force(base_force, channel)
     if channel_force then
         for name,tech in pairs(base_force.technologies) do
-            channel_force.technologies[name].researched = tech.researched;
+            syncTech(tech, channel_force.technologies[name])
         end
     end
 end
