@@ -2,6 +2,7 @@
 
 local guis = require("control.guis")
 local channels = require("control.channels")
+local badges = require("control.badges")
 
 function is_map_multichannel()
     local channelLimit = global.channelLimit
@@ -73,34 +74,42 @@ end
 function set_channels(entities, channel)
     local baseForceCache = {}
     local newForceCache = {}
+    local updatedEntities = {}
 
     for _, entity in pairs(entities) do
-        local base_force = baseForceCache[entity.force]
-        if not base_force then
-            local base_force_name, _ = channels.parse_force_name(entity.force.name)
-            base_force = game.forces[base_force_name]
+        if entity.force.name ~= 'neutral' then
+            local base_force = baseForceCache[entity.force]
             if not base_force then
-                -- TODO: do something better...
-                game.print("Unable to set entity channel: cannot find player force '"..base_name.."'")
-                return
+                local base_force_name, _ = channels.parse_force_name(entity.force.name)
+                base_force = game.forces[base_force_name]
+                if not base_force then
+                    -- TODO: do something better...
+                    game.print("Unable to set entity channel: cannot find player force '"..base_name.."'")
+                    return
+                end
+                baseForceCache[entity.force] = base_force
             end
-            baseForceCache[entity.force] = base_force
-        end
 
-        local new_force = newForceCache[base_force]
-        if not new_force then
-            new_force = get_or_create_channel_force(base_force, channel)
-            newForceCache[base_force] = new_force
-        end
+            local new_force = newForceCache[base_force]
+            if not new_force then
+                new_force = get_or_create_channel_force(base_force, channel)
+                newForceCache[base_force] = new_force
+            end
 
-        if (entity.force ~= new_force) then
-            entity.force = new_force
+            if (entity.force ~= new_force) then
+                entity.force = new_force
+                table.insert(updatedEntities, entity)
+            end
         end
     end
 
     for _, player in pairs(game.players) do
         if guis.hover_gui(player).visible then
             update_hover_gui(player)
+        end
+
+        for _, entity in pairs(updatedEntities) do
+            badges.updateIfValid(player.index, entity, channel)
         end
     end
 end
@@ -122,13 +131,14 @@ function set_channel_label(channel_force_name, label)
     end
 end
 
+function is_holding_changer(player)
+    return player.cursor_stack and player.cursor_stack.valid_for_read
+        and player.cursor_stack.name == "logistic-channel-changer"
+end
+
 function show_hide_guis(player)
     function is_hover_enabled(player)
         return settings.get_player_settings(player)["logiNetChannels-show-hover"].value
-    end
-    function is_holding_changer(player)
-        return player.cursor_stack and player.cursor_stack.valid_for_read
-            and player.cursor_stack.name == "logistic-channel-changer"
     end
 
     local hover = guis.hover_gui(player)
@@ -382,6 +392,27 @@ script.on_event(defines.events.on_player_cursor_stack_changed,
     function(event)
         local player = game.get_player(event.player_index)
         show_hide_guis(player)
+
+        if is_holding_changer(player) then
+            local friendlyForces = {}
+            for _, force in pairs(game.forces) do
+                if force == player.force or player.force.get_friend(force) then
+                    table.insert(friendlyForces, force)
+                end
+            end
+            
+            local entities = player.surface.find_entities_filtered {
+                type = {"roboport","logistic-container","spider-vehicle"},
+                force = friendlyForces
+            }
+
+            for _, entity in pairs(entities) do
+                local channel = get_channel(entity)
+                badges.createOrUpdate(player.index, entity, channel)
+            end
+        else
+            badges.destroyAll(player.index)
+        end
     end
 )
 
@@ -478,9 +509,6 @@ script.on_event(defines.events.on_player_selected_area,
             game.print("logistic-channel-changer: updating "..tostring(#event.entities).." entities to channel "..channel)
             
             set_channels(event.entities, channel)
-            -- for _, entity in pairs(event.entities) do
-            --     set_channel(entity, channel)
-            -- end
         end
     end
 )

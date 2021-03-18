@@ -81,25 +81,6 @@ end
 
 function guis.update_editor(player, channel, channel_label)
     local editor = guis.editor_gui(player)
-    if channel and channel >= 0 then
-        editor.sliderRow.textfield.caption = channel
-        editor.sliderRow.slider.slider_value = channel
-
-        editor.labelRow.textfield.text = channel_label or ''
-        editor.labelRow.default_label.visible = (channel == 0)
-        editor.labelRow.textfield.visible = (channel ~= 0)
-    else
-        editor.sliderRow.textfield.caption = ''
-        editor.sliderRow.slider.slider_value = 0
-
-        editor.labelRow.textfield.text = ''
-        editor.labelRow.default_label.visible = false
-        editor.labelRow.textfield.visible = false
-    end
-end
-
-function guis.update_editor(player, channel, channel_label)
-    local editor = guis.editor_gui(player)
     update_editor(editor, channel, channel_label)
 end
 
