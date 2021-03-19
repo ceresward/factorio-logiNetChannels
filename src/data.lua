@@ -59,6 +59,7 @@ channelChanger.entity_filter_mode = "whitelist"
 channelChanger.entity_type_filters = {"roboport","logistic-container","spider-vehicle"}
 table.insert(channelChanger.flags, "only-in-cursor")
 table.insert(channelChanger.flags, "draw-logistic-overlay")
+channelChanger.selection_color = data.raw["upgrade-item"]["upgrade-planner"].selection_color
 
 local channelChangerShortcut = {
     name = "give-logistic-channel-changer",

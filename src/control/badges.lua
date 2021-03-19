@@ -1,23 +1,24 @@
 local badges = {}
 
+local badgeScale = 2
+
 function badges.createOrUpdate(playerIndex, entity, channel)
     local badgeId = getPlayerBadges(playerIndex)[entity.unit_number]
     if badgeId and rendering.is_valid(badgeId) then
         rendering.set_text(badgeId, tostring(channel))
     else
-        -- TODO: improve the L&F of the rendered text:
-        --   1. Vertical centering of the text over the entity
-        --   2. Go back to white color?
-        --   3. Slightly bigger numbers?
-        --   4. Test w/ moving Spidertrons (should work...)
         badgeId = rendering.draw_text {
             text = tostring(channel),
+            -- text = "██",  -- Can be used for checking text bounding box / alignment
             surface = entity.surface,
             target = entity,
-            color = {1.0, 1.0, 0.5},
+            -- 5/16 ratio is techically closer to center, but it kinda looks better at 1/4
+            --target_offset = {0, -badgeScale*5/16},
+            target_offset = {0, -badgeScale/4},
+            color = {1.0, 1.0, 0.75},
             players = {playerIndex},
             alignment = "center",
-            scale = 2.0,
+            scale = badgeScale,
         }
         getPlayerBadges(playerIndex)[entity.unit_number] = badgeId
     end

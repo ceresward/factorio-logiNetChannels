@@ -500,15 +500,15 @@ script.on_event(defines.events.on_mod_item_opened,
 script.on_event(defines.events.on_player_selected_area,
     function(event)
         -- Note: can add check for #event.entities > 0 for actual implementation
-        if event.item == 'logistic-channel-changer' then
-            game.print("logistic-channel-changer: area selected")
-        end
         if event.item == 'logistic-channel-changer' and #event.entities > 0 then
             local player = game.get_player(event.player_index)
             local channel = guis.changer_gui(player).sliderRow.slider.slider_value
-            game.print("logistic-channel-changer: updating "..tostring(#event.entities).." entities to channel "..channel)
             
+            -- game.print("logistic-channel-changer: updating "..tostring(#event.entities).." entities to channel "..channel)
             set_channels(event.entities, channel)
+
+            -- Note:  if the devs ever add support, I can also use "utility/upgrade_selection_started" at selection start
+            player.play_sound { path = "utility/upgrade_selection_ended" }
         end
     end
 )
