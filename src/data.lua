@@ -19,7 +19,6 @@ default_gui["logiNetChannels_slider_edit_channel"] = {
 
 
 -- Technology prototypes
--- TODO: try loading mod w/ various overhaul mods; will the tech prereqs cause any problems?
 data:extend({
     {
         type = "technology",
@@ -32,6 +31,14 @@ data:extend({
                 effect_description = {"logiNetChannel.tech_effect_description"}
             }
         },
+        -- TODO: need to account for the possibility that the prereqs might not exist (overhaul mods can delete them)
+        -- Notes from Discord discussion (thanks calciumwizard):
+        -- 1. Conditionally creating the tech based on a mod setting is possible, but not a great idea; the user might
+        --    not be able to get to the settings menu if the error is already occurring (b/c it's a data phase error)
+        -- 2. It should be possible to just simply check if the prereqs are available here in data.lua, and skip
+        --    creating the tech based on that (or, maybe create the tech but only include prereqs if they exist)
+        -- 3. Deleting vanilla prototypes is generally frowned upon, so I shouldn't worry about it too much (i.e.
+        --    I probably shouldn't let it hold up the 1.1 release)
         prerequisites = { "utility-science-pack","logistic-robotics" },
         unit = {
           count = 100,

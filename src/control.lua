@@ -32,6 +32,16 @@ function has_logistic_channels(entity)
     return entity and is_channel_tech_researched(entity.force) and is_logistics_entity(entity)
 end
 
+function entities_with_channels(entities)
+    local result = {}
+    for _, entity in pairs(entities) do
+        if has_logistic_channels(entity) then
+            table.insert(result, entity)
+        end
+    end
+    return result
+end
+
 function has_entity_opened(player)
     return player.opened_gui_type == defines.gui_type.entity
 end
@@ -405,6 +415,7 @@ script.on_event(defines.events.on_player_cursor_stack_changed,
                 type = {"roboport","logistic-container","spider-vehicle"},
                 force = friendlyForces
             }
+            entities = entities_with_channels(entities)
 
             for _, entity in pairs(entities) do
                 local channel = get_channel(entity)
@@ -499,16 +510,19 @@ script.on_event(defines.events.on_mod_item_opened,
 
 script.on_event(defines.events.on_player_selected_area,
     function(event)
-        -- Note: can add check for #event.entities > 0 for actual implementation
         if event.item == 'logistic-channel-changer' and #event.entities > 0 then
-            local player = game.get_player(event.player_index)
-            local channel = guis.changer_gui(player).sliderRow.slider.slider_value
-            
-            -- game.print("logistic-channel-changer: updating "..tostring(#event.entities).." entities to channel "..channel)
-            set_channels(event.entities, channel)
+            -- Filter out any entities that don't have channels (e.g. b/c their force hasn't researched channel tech yet)
+            local filteredEntities = entities_with_channels(event.entities)
+            if #filteredEntities > 0 then
+                local player = game.get_player(event.player_index)
+                local channel = guis.changer_gui(player).sliderRow.slider.slider_value
+                
+                game.print("logistic-channel-changer: updating "..tostring(#filteredEntities).." entities to channel "..channel)
+                set_channels(filteredEntities, channel)
 
-            -- Note:  if the devs ever add support, I can also use "utility/upgrade_selection_started" at selection start
-            player.play_sound { path = "utility/upgrade_selection_ended" }
+                -- Note:  if the devs ever add support, I can also use "utility/upgrade_selection_started" at selection start
+                player.play_sound { path = "utility/upgrade_selection_ended" }
+            end
         end
     end
 )
