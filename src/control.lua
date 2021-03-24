@@ -1,5 +1,6 @@
 --control.lua
 
+local util = require("control.util")
 local guis = require("control.guis")
 local channels = require("control.channels")
 local badges = require("control.badges")
@@ -29,7 +30,9 @@ function has_logistic_channels(entity)
         return has_logistic_network() or has_logistic_points()
     end
 
-    return entity and is_channel_tech_researched(entity.force) and is_logistics_entity(entity)
+    return entity and entity.type ~= "character"
+        and is_channel_tech_researched(entity.force)
+        and is_logistics_entity(entity)
 end
 
 function entities_with_channels(entities)
@@ -37,6 +40,44 @@ function entities_with_channels(entities)
     for _, entity in pairs(entities) do
         if has_logistic_channels(entity) then
             table.insert(result, entity)
+        end
+    end
+    return result
+end
+
+function find_all_logistic_entities(force, surfaceName)
+    local function entity_filter(entity)
+        return entity.type ~= "character"
+    end
+
+    local results = {}
+
+    local surfaceNetworks = force.logistic_networks[surfaceName]
+    if surfaceNetworks and #surfaceNetworks > 0 then
+        for _, network in pairs(surfaceNetworks) do
+            if network and network.valid then
+                for _, cell in pairs(network.cells) do
+                    table.insert(results, cell.owner)
+                end
+                util.table_appendArrayFiltered(results, network.providers, entity_filter)
+                util.table_appendArrayFiltered(results, network.empty_providers, entity_filter)
+                util.table_appendArrayFiltered(results, network.requesters, entity_filter)
+                util.table_appendArrayFiltered(results, network.storages, entity_filter)
+                util.table_appendArrayFiltered(results, network.logistic_members, entity_filter)
+                -- TODO: this is for fun...remove it afterward
+                util.table_appendArray(results, network.robots)
+            end
+        end
+    end
+
+    return results
+end
+
+function get_friends_of(target_force)
+    local result = {}
+    for _, force in pairs(game.forces) do
+        if force == target_force or target_force.get_friend(force) then
+            table.insert(result, force)
         end
     end
     return result
@@ -404,20 +445,15 @@ script.on_event(defines.events.on_player_cursor_stack_changed,
         show_hide_guis(player)
 
         if is_holding_changer(player) then
-            local friendlyForces = {}
-            for _, force in pairs(game.forces) do
-                if force == player.force or player.force.get_friend(force) then
-                    table.insert(friendlyForces, force)
-                end
-            end
+            local friendlyForces = get_friends_of(player.force)
             
-            local entities = player.surface.find_entities_filtered {
-                type = {"roboport","logistic-container","spider-vehicle"},
-                force = friendlyForces
-            }
-            entities = entities_with_channels(entities)
+            local foundEntities = {}
+            for _, force in pairs(friendlyForces) do
+                local entities = find_all_logistic_entities(force, player.surface.name)
+                util.table_appendArray(foundEntities, entities_with_channels(entities))
+            end
 
-            for _, entity in pairs(entities) do
+            for _, entity in pairs(foundEntities) do
                 local channel = get_channel(entity)
                 badges.createOrUpdate(player.index, entity, channel)
             end
@@ -508,17 +544,29 @@ script.on_event(defines.events.on_mod_item_opened,
     end
 )
 
+-- TODO:  things to work through for 1.1
+-- 1. Should Channel Changer have a limited radius?
+--    - Functionally speaking...does it make sense for the player to be able to change channels at an unlimited distance?
+--    - Performance consideration:  putting badges on all channel entities on a surface could be very slow for large factories
+--       - Could consider a limited radius on badging, but not on selection?
 script.on_event(defines.events.on_player_selected_area,
     function(event)
-        if event.item == 'logistic-channel-changer' and #event.entities > 0 then
-            -- Filter out any entities that don't have channels (e.g. b/c their force hasn't researched channel tech yet)
-            local filteredEntities = entities_with_channels(event.entities)
-            if #filteredEntities > 0 then
-                local player = game.get_player(event.player_index)
+        -- game.print("test")
+
+        if event.item == 'logistic-channel-changer' then
+            local player = game.get_player(event.player_index)
+            local friendlyForces = get_friends_of(player.force)
+            local entities = event.surface.find_entities_filtered {
+                area = event.area,
+                force = friendlyForces
+            }
+            local entitiesWithChannels = entities_with_channels(entities)
+
+            if #entitiesWithChannels > 0 then
                 local channel = guis.changer_gui(player).sliderRow.slider.slider_value
                 
-                game.print("logistic-channel-changer: updating "..tostring(#filteredEntities).." entities to channel "..channel)
-                set_channels(filteredEntities, channel)
+                --game.print("logistic-channel-changer: updating "..tostring(#entitiesWithChannels).." entities to channel "..channel)
+                set_channels(entitiesWithChannels, channel)
 
                 -- Note:  if the devs ever add support, I can also use "utility/upgrade_selection_started" at selection start
                 player.play_sound { path = "utility/upgrade_selection_ended" }

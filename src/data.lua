@@ -61,9 +61,10 @@ local channelChanger = table.deepcopy(data.raw["selection-tool"]["selection-tool
 --channelChanger.icon = "__FriendBlueprints__/graphics/icons/friends-blueprint.png"
 --channelChanger.icon_size = 32
 channelChanger.name = "logistic-channel-changer"
-channelChanger.selection_mode = {"any-entity","friend"}
+-- channelChanger.selection_mode = {"any-entity","friend"}
+channelChanger.selection_mode = {"nothing"}
 channelChanger.entity_filter_mode = "whitelist"
-channelChanger.entity_type_filters = {"roboport","logistic-container","spider-vehicle"}
+-- channelChanger.entity_type_filters = {"roboport","logistic-container","spider-vehicle"}
 table.insert(channelChanger.flags, "only-in-cursor")
 table.insert(channelChanger.flags, "draw-logistic-overlay")
 channelChanger.selection_color = data.raw["upgrade-item"]["upgrade-planner"].selection_color
