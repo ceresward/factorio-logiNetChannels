@@ -26,3 +26,7 @@ Additional information about how the mod works, features, and limitations can be
 ## Release Notes
 
 See https://mods.factorio.com/mod/LogiNetChannels/changelog
+
+## Attribution
+
+- Remote Control icon made by [Freepik](https://www.freepik.com) from [www.flaticon.com](https://www.flaticon.com/)

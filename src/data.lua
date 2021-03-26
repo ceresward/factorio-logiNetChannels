@@ -56,29 +56,38 @@ data:extend({
 
 
 -- Channel changer tool
-local channelChanger = table.deepcopy(data.raw["selection-tool"]["selection-tool"])
--- TODO: create custom icon
---channelChanger.icon = "__FriendBlueprints__/graphics/icons/friends-blueprint.png"
---channelChanger.icon_size = 32
-channelChanger.name = "logistic-channel-changer"
--- channelChanger.selection_mode = {"any-entity","friend"}
-channelChanger.selection_mode = {"nothing"}
-channelChanger.entity_filter_mode = "whitelist"
--- channelChanger.entity_type_filters = {"roboport","logistic-container","spider-vehicle"}
-table.insert(channelChanger.flags, "only-in-cursor")
-table.insert(channelChanger.flags, "draw-logistic-overlay")
-channelChanger.selection_color = data.raw["upgrade-item"]["upgrade-planner"].selection_color
+local channelChanger = {
+    type = "selection-tool",
+    name = "logistic-channel-changer",
+    icons = {
+        {icon = "__base__/graphics/icons/upgrade-planner.png", icon_size = 64, icon_mipmaps = 4},
+        {icon = "__LogiNetChannels__/graphics/icons/channel-changer-shortcut-x32-white.png", icon_size = 32, scale = 0.75},
+    },
+    flags = {"hidden", "not-stackable", "spawnable", "only-in-cursor", "draw-logistic-overlay"},
+    subgroup = "other",
+    stack_size = 1,
+    selection_color = data.raw["upgrade-item"]["upgrade-planner"].selection_color,
+    alt_selection_color = data.raw["upgrade-item"]["upgrade-planner"].selection_color,
+    selection_mode = {"nothing"},
+    alt_selection_mode = {"nothing"},
+    selection_cursor_box_type = "copy",
+    alt_selection_cursor_box_type = "copy",
+}
 
 local channelChangerShortcut = {
     name = "give-logistic-channel-changer",
     type = "shortcut",
     action = "spawn-item",
     item_to_spawn = "logistic-channel-changer",
-    -- TODO: create custom icons
-    icon = table.deepcopy(data.raw["shortcut"]["give-blueprint"].icon),
-    disabled_icon = table.deepcopy(data.raw["shortcut"]["give-blueprint"].disabled_icon),
-    small_icon = table.deepcopy(data.raw["shortcut"]["give-blueprint"].small_icon),
-    disabled_small_icon = table.deepcopy(data.raw["shortcut"]["give-blueprint"].disabled_small_icon),
+    -- TODO: shortcut icon polish, mipmaps, etc.
+    -- TODO: add small_icon, disabled_icon, disabled_small_icon
+    icon = {
+        filename = "__LogiNetChannels__/graphics/icons/channel-changer-shortcut-x32-white.png",
+        priority = "extra-high-no-scale",
+        size = 32,
+        scale = 0.5,
+        flags = {"gui-icon"}
+    },
     style = "green",
     technology_to_unlock = "logistic-channels",
 }

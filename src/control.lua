@@ -1,5 +1,7 @@
 --control.lua
 
+-- TODO: add attribution section to mod portal page, once 1.1 is released
+
 local util = require("control.util")
 local guis = require("control.guis")
 local channels = require("control.channels")
@@ -429,13 +431,26 @@ script.on_event(defines.events.on_gui_confirmed,
         if editor.visible and event.element == editor.sliderRow.textfield then
             local channel = channels.parse_nearest_channel(editor.sliderRow.textfield.text)
             update_editor_gui(player, channel)
+        elseif editor.visible and event.element == editor.labelRow.textfield then
+            local channel = channels.parse_nearest_channel(editor.sliderRow.textfield.text)
+            local base_force_name, _ = channels.parse_force_name(player.opened.force.name)
+            local channel_force_name = channels.to_force_name(base_force_name, channel)
+            set_channel_label(channel_force_name, editor.labelRow.textfield.text)
         end
 
         local changer = guis.changer_gui(player);
         if changer.visible and event.element == changer.sliderRow.textfield then
             local channel = channels.parse_nearest_channel(changer.sliderRow.textfield.text)
             update_changer_gui(player, channel)
+        elseif changer.visible and event.element == changer.labelRow.textfield then
+            local channel = channels.parse_nearest_channel(changer.sliderRow.textfield.text)
+            local base_force_name, _ = channels.parse_force_name(player.force.name)
+            local channel_force_name = channels.to_force_name(base_force_name, channel)
+            set_channel_label(channel_force_name, changer.labelRow.textfield.text)
         end
+
+        -- Apply new channel label setting
+        
     end
 )
 
@@ -489,12 +504,6 @@ script.on_event(defines.events.on_gui_closed,
                 -- Apply new channel setting
                 local channel = editor.sliderRow.slider.slider_value
                 set_channel(entity, channel)
-
-                -- Apply new channel label setting
-                local label = editor.labelRow.textfield.text
-                local base_force_name, _ = channels.parse_force_name(entity.force.name)
-                local channel_force_name = channels.to_force_name(base_force_name, channel)
-                set_channel_label(channel_force_name, label)
                 
                 show_hide_guis(player)
             end

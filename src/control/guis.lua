@@ -129,14 +129,14 @@ end
 
 function update_editor(editor, channel, channel_label)
     if channel and channel >= 0 then
-        editor.sliderRow.textfield.caption = channel
+        editor.sliderRow.textfield.text = tostring(channel)
         editor.sliderRow.slider.slider_value = channel
 
         editor.labelRow.textfield.text = channel_label or ''
         editor.labelRow.default_label.visible = (channel == 0)
         editor.labelRow.textfield.visible = (channel ~= 0)
     else
-        editor.sliderRow.textfield.caption = ''
+        editor.sliderRow.textfield.text = ''
         editor.sliderRow.slider.slider_value = 0
 
         editor.labelRow.textfield.text = ''
