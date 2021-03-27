@@ -12,12 +12,10 @@ Additional information about how the mod works, features, and limitations can be
 ## Roadmap
 
 ### 1.2
-- [ ] Optional feature: unlock channels through research
-- [ ] Ability to set assigned channel using circuit signals
-- [ ] Channel changer:  set channels using a selection tool, similar to upgrade planner
+- [ ] Keep channel force diplomacy (friends/cease-fire) in sync with the main player force diplomacy (possibly as a separate library mod)
 
 ### Unscheduled
-- [ ] Keep channel force diplomacy (friends/cease-fire) in sync with the main player force diplomacy (possibly as a separate library mod)
+- [ ] Ability to set assigned channel using circuit signals (if possible; still investigating)
 - [ ] Edit/view channel property from the main entity GUI instead of the upper left corner
     - _Blocked: mod API does not yet support modifying base game GUIs_
 - [ ] Save channel information in blueprints (if possible; still investigating)

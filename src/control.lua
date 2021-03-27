@@ -1,5 +1,11 @@
 --control.lua
 
+-- TODO: fix bug by which Spidertron channel cannot be changed unless it is within range of a Roboport
+--       This is due to how I'm searching for logistic entities; I'm only searching within networks.
+--       Spidertrons won't always be within range of a network.  This also has potential implications
+--       for inserters, etc. too; sometimes they may have logistic support enabled, but not be within
+--       range of a roboport.  I might have to rethink how I've implemented the entity search logic.
+
 local util = require("control.util")
 local guis = require("control.guis")
 local channels = require("control.channels")
