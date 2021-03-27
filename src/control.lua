@@ -1,7 +1,5 @@
 --control.lua
 
--- TODO: add attribution section to mod portal page, once 1.1 is released
-
 local util = require("control.util")
 local guis = require("control.guis")
 local channels = require("control.channels")
@@ -66,8 +64,8 @@ function find_all_logistic_entities(force, surfaceName)
                 util.table_appendArrayFiltered(results, network.requesters, entity_filter)
                 util.table_appendArrayFiltered(results, network.storages, entity_filter)
                 util.table_appendArrayFiltered(results, network.logistic_members, entity_filter)
-                -- TODO: this is for fun...remove it afterward
-                util.table_appendArray(results, network.robots)
+                -- This actually works, but is not very performant
+                --util.table_appendArray(results, network.robots)
             end
         end
     end
@@ -553,11 +551,6 @@ script.on_event(defines.events.on_mod_item_opened,
     end
 )
 
--- TODO:  things to work through for 1.1
--- 1. Should Channel Changer have a limited radius?
---    - Functionally speaking...does it make sense for the player to be able to change channels at an unlimited distance?
---    - Performance consideration:  putting badges on all channel entities on a surface could be very slow for large factories
---       - Could consider a limited radius on badging, but not on selection?
 script.on_event(defines.events.on_player_selected_area,
     function(event)
         -- game.print("test")
@@ -565,6 +558,7 @@ script.on_event(defines.events.on_player_selected_area,
         if event.item == 'logistic-channel-changer' then
             local player = game.get_player(event.player_index)
             local friendlyForces = get_friends_of(player.force)
+
             local entities = event.surface.find_entities_filtered {
                 area = event.area,
                 force = friendlyForces

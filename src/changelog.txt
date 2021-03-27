@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.0
+Date: 26. 03. 2021
+  Features:
+    - Channel functionality is now unlocked by tech research (can be disabled in mod settings)
+    - New Channel changer selection-tool can change channels by selecting an area, and also shows entity channels at a glance when held in hand
+---------------------------------------------------------------------------------------------------
 Version: 1.0.12
 Date: 13. 03. 2021
   Other:

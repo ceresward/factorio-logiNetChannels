@@ -39,7 +39,7 @@ data:extend({
         --    creating the tech based on that (or, maybe create the tech but only include prereqs if they exist)
         -- 3. Deleting vanilla prototypes is generally frowned upon, so I shouldn't worry about it too much (i.e.
         --    I probably shouldn't let it hold up the 1.1 release)
-        prerequisites = { "utility-science-pack","logistic-robotics" },
+        prerequisites = { "utility-science-pack", "logistic-robotics" },
         unit = {
           count = 100,
           ingredients = {
@@ -79,8 +79,8 @@ local channelChangerShortcut = {
     type = "shortcut",
     action = "spawn-item",
     item_to_spawn = "logistic-channel-changer",
-    -- TODO: shortcut icon polish, mipmaps, etc.
-    -- TODO: add small_icon, disabled_icon, disabled_small_icon
+    -- TODO: polish existing shortcut icon (improve appearance, add mipmaps, etc.)
+    -- TODO: add small_icon, disabled_icon, and disabled_small_icon variants
     icon = {
         filename = "__LogiNetChannels__/graphics/icons/channel-changer-shortcut-x32-white.png",
         priority = "extra-high-no-scale",
