@@ -1,10 +1,11 @@
 --control.lua
 
--- TODO: fix bug by which Spidertron channel cannot be changed unless it is within range of a Roboport
---       This is due to how I'm searching for logistic entities; I'm only searching within networks.
---       Spidertrons won't always be within range of a network.  This also has potential implications
---       for inserters, etc. too; sometimes they may have logistic support enabled, but not be within
---       range of a roboport.  I might have to rethink how I've implemented the entity search logic.
+-- TODO: fix bug by which Spidertron channel badge cannot be seen unless it is within range of a
+--       Roboport.  This is due to how I'm searching for logistic entities; I'm only searching
+--       within networks.  Spidertrons won't always be within range of a network.
+--       This also has potential implications for inserters, etc. too; sometimes they may have
+--       logistic support enabled, but not be within range of a roboport.  I might have to rethink
+--       how I've implemented the entity search logic.
 
 local util = require("control.util")
 local guis = require("control.guis")
@@ -160,8 +161,8 @@ function set_channels(entities, channel)
         end
     end
 
-    for _, player in pairs(game.players) do
-        if guis.hover_gui(player).visible then
+    for _, player in pairs(game.connected_players) do
+        if is_hover_enabled(player) and has_logistic_channels(player.selected) then
             update_hover_gui(player)
         end
 
@@ -333,11 +334,11 @@ function syncChannelTechEnabled()
         else
             -- This is a small hack to deal with the tech unlock for channel changer shortcuts. If
             -- a player hasn't unlocked the shortcut yet, and joins a map with tech disabled, they
-            -- won't be able to use the shortcut at all.  Hack is
+            -- won't be able to use the shortcut at all.  Hack is to temporarily research the tech,
+            -- and then disable it.  This causes the channel changer to appear for that player.
             channelTech.researched = true
             channelTech.enabled = false
         end
-        channelTech.enabled = settings.startup["logiNetChannels-require-research"].value
     end
 end
 
