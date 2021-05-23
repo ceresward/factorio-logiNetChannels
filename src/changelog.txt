@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.1
+Date: 23. 05. 2021
+  Bugfixes:
+    - Fixed a bug that could occur when a savegame includes players that disconnected with a visible hover GUI
+---------------------------------------------------------------------------------------------------
 Version: 1.1.0
 Date: 26. 03. 2021
   Features:
