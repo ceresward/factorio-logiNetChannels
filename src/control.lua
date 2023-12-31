@@ -195,6 +195,8 @@ function is_holding_changer(player)
 end
 
 function show_hide_guis(player)
+    -- NOTE: this function is called on_tick so keep performance in mind!
+    
     function is_hover_enabled(player)
         return settings.get_player_settings(player)["logiNetChannels-show-hover"].value
     end
@@ -462,8 +464,6 @@ script.on_event(defines.events.on_gui_confirmed,
 script.on_event(defines.events.on_player_cursor_stack_changed,
     function(event)
         local player = game.get_player(event.player_index)
-        show_hide_guis(player)
-
         if is_holding_changer(player) then
             local friendlyForces = get_friends_of(player.force)
             
@@ -483,21 +483,6 @@ script.on_event(defines.events.on_player_cursor_stack_changed,
     end
 )
 
-script.on_event(defines.events.on_gui_opened,
-    function(event)
-        if is_map_multichannel() then
-            local entity = event.entity
-            if has_logistic_channels(entity) then
-                local player = game.get_player(event.player_index)
-                local editor = guis.editor_gui(player)
-                local channel = get_channel(entity)
-                
-                show_hide_guis(player)
-            end
-        end
-    end
-)
-
 script.on_event(defines.events.on_gui_closed,
     function(event)
         if event.gui_type == defines.gui_type.entity and is_map_multichannel() then
@@ -509,8 +494,6 @@ script.on_event(defines.events.on_gui_closed,
                 -- Apply new channel setting
                 local channel = editor.sliderRow.slider.slider_value
                 set_channel(entity, channel)
-                
-                show_hide_guis(player)
             end
         end
     end
@@ -527,16 +510,6 @@ script.on_event(defines.events.on_entity_settings_pasted,
                 local channel = get_channel(source)
                 set_channel(destination, channel)
             end
-        end
-    end
-)
-
-script.on_event(defines.events.on_selected_entity_changed,
-    function(event)
-        if is_map_multichannel() then
-            local player = game.get_player(event.player_index)
-            local entity = player.selected
-            show_hide_guis(player)
         end
     end
 )
@@ -580,6 +553,16 @@ script.on_event(defines.events.on_player_selected_area,
 
                 -- Note:  if the devs ever add support, I can also use "utility/upgrade_selection_started" at selection start
                 player.play_sound { path = "utility/upgrade_selection_ended" }
+            end
+        end
+    end
+)
+
+script.on_event(defines.events.on_tick,
+    function(event)
+        if is_map_multichannel() then
+            for _, player in pairs(game.connected_players) do
+                show_hide_guis(player)
             end
         end
     end
