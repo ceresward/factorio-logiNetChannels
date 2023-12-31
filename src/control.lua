@@ -17,6 +17,10 @@ function is_map_multichannel()
     return channelLimit ~= nil and channelLimit > 1
 end
 
+function is_hover_enabled(player)
+    return settings.get_player_settings(player)["logiNetChannels-show-hover"].value
+end
+
 function has_logistic_channels(entity)
     function is_channel_tech_researched(force)
         -- Channel tech is considered to be researched for the purposes of mod features if it is disabled
@@ -196,10 +200,6 @@ end
 
 function show_hide_guis(player)
     -- NOTE: this function is called on_tick so keep performance in mind!
-    
-    function is_hover_enabled(player)
-        return settings.get_player_settings(player)["logiNetChannels-show-hover"].value
-    end
 
     local hover = guis.hover_gui(player)
     local editor = guis.editor_gui(player)
