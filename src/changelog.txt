@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.2
+Date: 31. 12. 2023
+  Bugfixes:
+    - Fixed a bug where the channel editor GUI didn't close when the opened entity was removed/destroyed
+    - Potential fix for a game crash that can occur related to function 'is_hover_enabled'
+---------------------------------------------------------------------------------------------------
 Version: 1.1.1
 Date: 23. 05. 2021
   Bugfixes:
