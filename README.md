@@ -11,7 +11,11 @@ Additional information about how the mod works, features, and limitations can be
 
 ## Roadmap
 
-### 1.2
+### 2.0
+
+- [ ] Update mod to work with Factorio 2.0 and Space Age
+
+### 2.1
 - [ ] Keep channel force diplomacy (friends/cease-fire) in sync with the main player force diplomacy (possibly as a separate library mod)
 
 ### Unscheduled
