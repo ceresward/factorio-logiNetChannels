@@ -1,6 +1,7 @@
 # Notice: Factorio 2.0 Plans
 
 Some of you may be wondering, what will happen with this mod when Factorio 2.0 and the Space Age DLC are released?  The short answer is - this mod will be updated to support Factorio 2.0 and Space Age, and you can still play with it if you like.  However, you may find you no longer need it!  The Factorio team have made a number of awesome improvements to how bots behave that should help to make large networks a lot less annoying to deal with:
+
 - Robots are chosen to service requests based on predicted arrival time instead of nearest idle robot
 - Individual roboports can now be configured to keep a certain number of robots stationed at the roboport at all times
 - Robots are now much smarter when picking a roboport to recharge at
