@@ -1,5 +1,57 @@
 local mod_gui = require("mod-gui")
 
+-----------------------------------------------------------
+--  Internal implementation
+-----------------------------------------------------------
+
+local function addEditorComponents(editor)
+    local sliderRow = editor.add{ type="flow", name="sliderRow", caption="Slider Row", direction="horizontal" }
+    sliderRow.style.horizontal_spacing = 12;
+    
+    sliderRow.add{
+        type="textfield", name="textfield", caption="0",
+        numeric=true,
+        style="logiNetChannels_textfield_edit_channel"
+    }
+    
+    local channelLimit = settings.global["logiNetChannelLimit"].value
+    sliderRow.add{
+        type="slider", name="slider",
+        minimum_value=0, maximum_value=(channelLimit-1), value_step=1,
+        discrete_slider=true, discrete_values=true,
+        style="logiNetChannels_slider_edit_channel"
+    }
+    
+    local labelRow = editor.add{ type="flow", name="labelRow", caption="Label Row", direction="horizontal" }
+    labelRow.style.horizontal_spacing = 12;
+    
+    labelRow.add{ type="label", name="label", caption={"logiNetChannel.editor_label_caption"} }
+    labelRow.add{ type="label", name="default_label", caption={"logiNetChannel.default_label"}}
+    labelRow.add{ type="textfield", name="textfield", lose_focus_on_confirm=true }
+end
+
+local function update_editor(editor, channel, channel_label)
+    if channel and channel >= 0 then
+        editor.sliderRow.textfield.text = tostring(channel)
+        editor.sliderRow.slider.slider_value = channel
+
+        editor.labelRow.textfield.text = channel_label or ''
+        editor.labelRow.default_label.visible = (channel == 0)
+        editor.labelRow.textfield.visible = (channel ~= 0)
+    else
+        editor.sliderRow.textfield.text = ''
+        editor.sliderRow.slider.slider_value = 0
+
+        editor.labelRow.textfield.text = ''
+        editor.labelRow.default_label.visible = false
+        editor.labelRow.textfield.visible = false
+    end
+end
+
+-----------------------------------------------------------
+-- External API
+-----------------------------------------------------------
+
 local guis = {}
 
 function guis.editor_gui(player)
@@ -96,53 +148,6 @@ end
 function guis.update_changer(player, channel, channel_label)
     local changer = guis.changer_gui(player)
     update_editor(changer, channel, channel_label)
-end
-
------------------------------------------------------------
---  Private functions
------------------------------------------------------------
-function addEditorComponents(editor)
-    local sliderRow = editor.add{ type="flow", name="sliderRow", caption="Slider Row", direction="horizontal" }
-    sliderRow.style.horizontal_spacing = 12;
-    
-    sliderRow.add{
-        type="textfield", name="textfield", caption="0",
-        numeric=true,
-        style="logiNetChannels_textfield_edit_channel"
-    }
-    
-    local channelLimit = settings.global["logiNetChannelLimit"].value
-    sliderRow.add{
-        type="slider", name="slider",
-        minimum_value=0, maximum_value=(channelLimit-1), value_step=1,
-        discrete_slider=true, discrete_values=true,
-        style="logiNetChannels_slider_edit_channel"
-    }
-    
-    local labelRow = editor.add{ type="flow", name="labelRow", caption="Label Row", direction="horizontal" }
-    labelRow.style.horizontal_spacing = 12;
-    
-    labelRow.add{ type="label", name="label", caption={"logiNetChannel.editor_label_caption"} }
-    labelRow.add{ type="label", name="default_label", caption={"logiNetChannel.default_label"}}
-    labelRow.add{ type="textfield", name="textfield", lose_focus_on_confirm=true }
-end
-
-function update_editor(editor, channel, channel_label)
-    if channel and channel >= 0 then
-        editor.sliderRow.textfield.text = tostring(channel)
-        editor.sliderRow.slider.slider_value = channel
-
-        editor.labelRow.textfield.text = channel_label or ''
-        editor.labelRow.default_label.visible = (channel == 0)
-        editor.labelRow.textfield.visible = (channel ~= 0)
-    else
-        editor.sliderRow.textfield.text = ''
-        editor.sliderRow.slider.slider_value = 0
-
-        editor.labelRow.textfield.text = ''
-        editor.labelRow.default_label.visible = false
-        editor.labelRow.textfield.visible = false
-    end
 end
 
 return guis

@@ -1,9 +1,17 @@
+-----------------------------------------------------------
+--  Internal implementation
+-----------------------------------------------------------
+
+local FORCE_REGEX = "(.+)%.channel%.(%d+)"
+
+-----------------------------------------------------------
+-- External API
+-----------------------------------------------------------
+
 local channels = {}
 
-channels.FORCE_REGEX = "(.+)%.channel%.(%d+)"
-
 function channels.is_channel_force_name(force_name)
-    return string.match(force_name, channels.FORCE_REGEX) ~= nil
+    return string.match(force_name, FORCE_REGEX) ~= nil
 end
 
 function channels.parse_nearest_channel(channel_text)
@@ -17,7 +25,7 @@ function channels.parse_nearest_channel(channel_text)
 end
 
 function channels.parse_force_name(force_name)
-    local base_name, channel = string.match(force_name, channels.FORCE_REGEX)
+    local base_name, channel = string.match(force_name, FORCE_REGEX)
     if base_name then
         return base_name, tonumber(channel)
     else

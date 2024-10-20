@@ -12,29 +12,29 @@ local guis = require("control.guis")
 local channels = require("control.channels")
 local badges = require("control.badges")
 
-function is_map_multichannel()
+local function is_map_multichannel()
     local channelLimit = global.channelLimit
     return channelLimit ~= nil and channelLimit > 1
 end
 
-function is_hover_enabled(player)
+local function is_hover_enabled(player)
     return settings.get_player_settings(player)["logiNetChannels-show-hover"].value
 end
 
-function has_logistic_channels(entity)
-    function is_channel_tech_researched(force)
+local function has_logistic_channels(entity)
+    local function is_channel_tech_researched(force)
         -- Channel tech is considered to be researched for the purposes of mod features if it is disabled
         local channelTech = force.technologies["logistic-channels"]
         return (not channelTech.enabled) or channelTech.researched
     end
     
-    function is_logistics_entity(entity)
+    local function is_logistics_entity(entity)
         -- Note:  the parameter value MUST be a LuaEntity!  There is no way to safely check the type
         -- of an arbitrary Factorio object, so this must be the caller's responsibility
-        function has_logistic_network()
+        local function has_logistic_network()
             return (entity and entity.logistic_network) ~= nil
         end
-        function has_logistic_points()
+        local function has_logistic_points()
             return (entity and entity.get_logistic_point) ~= nil and #entity.get_logistic_point() > 0;
         end
     
@@ -46,7 +46,7 @@ function has_logistic_channels(entity)
         and is_logistics_entity(entity)
 end
 
-function entities_with_channels(entities)
+local function entities_with_channels(entities)
     local result = {}
     for _, entity in pairs(entities) do
         if has_logistic_channels(entity) then
@@ -56,7 +56,7 @@ function entities_with_channels(entities)
     return result
 end
 
-function find_all_logistic_entities(force, surfaceName)
+local function find_all_logistic_entities(force, surfaceName)
     local function entity_filter(entity)
         return entity.type ~= "character"
     end
@@ -84,7 +84,7 @@ function find_all_logistic_entities(force, surfaceName)
     return results
 end
 
-function get_friends_of(target_force)
+local function get_friends_of(target_force)
     local result = {}
     for _, force in pairs(game.forces) do
         if force == target_force or target_force.get_friend(force) then
@@ -94,11 +94,11 @@ function get_friends_of(target_force)
     return result
 end
 
-function has_entity_opened(player)
+local function has_entity_opened(player)
     return player.opened_gui_type == defines.gui_type.entity
 end
 
-function get_channel_force(base_force, channel)
+local function get_channel_force(base_force, channel)
     if not channel or channel == 0 then
         return base_force
     else
@@ -107,7 +107,9 @@ function get_channel_force(base_force, channel)
     end
 end
 
-function get_or_create_channel_force(base_force, channel)
+local syncAllTechToChannel  -- Forward declaration; definition comes later
+
+local function get_or_create_channel_force(base_force, channel)
     if not channel or channel == 0 then
         return base_force
     else
@@ -124,16 +126,14 @@ function get_or_create_channel_force(base_force, channel)
     end
 end
 
-function get_channel(entity)
+local function get_channel(entity)
     local _, channel = channels.parse_force_name(entity.force.name)
     return channel or 0
 end
 
-function set_channel(entity, channel)
-    set_channels({entity}, channel)
-end
+local update_hover_gui  -- forward declaraction
 
-function set_channels(entities, channel)
+local function set_channels(entities, channel)
     local baseForceCache = {}
     local newForceCache = {}
     local updatedEntities = {}
@@ -176,12 +176,16 @@ function set_channels(entities, channel)
     end
 end
 
-function get_channel_label(channel_force_name)
+local function set_channel(entity, channel)
+    set_channels({entity}, channel)
+end
+
+local function get_channel_label(channel_force_name)
     global.channel_labels = global.channel_labels or {}
     return global.channel_labels[channel_force_name] or ''
 end
 
-function set_channel_label(channel_force_name, label)
+local function set_channel_label(channel_force_name, label)
     global.channel_labels = global.channel_labels or {}
     
     local _, channel = channels.parse_force_name(channel_force_name)
@@ -193,12 +197,15 @@ function set_channel_label(channel_force_name, label)
     end
 end
 
-function is_holding_changer(player)
+local function is_holding_changer(player)
     return player.cursor_stack and player.cursor_stack.valid_for_read
         and player.cursor_stack.name == "logistic-channel-changer"
 end
 
-function show_hide_guis(player)
+local update_editor_gui  -- forward declaraction
+local update_changer_gui  -- forward declaration
+
+local function show_hide_guis(player)
     -- NOTE: this function is called on_tick so keep performance in mind!
 
     local hover = guis.hover_gui(player)
@@ -230,7 +237,7 @@ function show_hide_guis(player)
     changer.visible = (show == "changer")
 end
 
-function update_editor_gui(player, channel)
+local function update_editor_gui(player, channel)
     if channel and channel > 0 then
         local base_force_name, _ = channels.parse_force_name(player.opened.force.name)
         local channel_force_name = channels.to_force_name(base_force_name, channel)
@@ -241,7 +248,7 @@ function update_editor_gui(player, channel)
     end
 end
 
-function update_hover_gui(player)
+local function update_hover_gui(player)
     local channel_force_name = player.selected.force.name
     local _, channel = channels.parse_force_name(channel_force_name)
 
@@ -252,7 +259,7 @@ function update_hover_gui(player)
     end
 end
 
-function update_changer_gui(player, channel)
+local function update_changer_gui(player, channel)
     if channel and channel > 0 then
         local channel_force_name = channels.to_force_name(player.force.name, channel)
         guis.update_changer(player, channel, get_channel_label(channel_force_name))
@@ -262,7 +269,7 @@ function update_changer_gui(player, channel)
     end
 end
 
-function syncChannelLimit()
+local function syncChannelLimit()
     local currentLimit = global.channelLimit
     local newLimit = settings.global["logiNetChannelLimit"].value;
     
@@ -291,14 +298,14 @@ function syncChannelLimit()
 end
 
 -- Syncs all writeable properties from srcTech into destTech
-function syncTech(srcTech, destTech)
+local function syncTech(srcTech, destTech)
     destTech.researched = srcTech.researched
     destTech.enabled = srcTech.enabled;
     destTech.visible_when_disabled = srcTech.visible_when_disabled;
     destTech.level = srcTech.level;
 end
 
-function syncSingleTechToChannels(technology)
+local function syncSingleTechToChannels(technology)
     for channel = 1,global.channelLimit do
         local channel_force = get_channel_force(technology.force, channel)
         if channel_force then
@@ -307,7 +314,7 @@ function syncSingleTechToChannels(technology)
     end
 end
 
-function syncAllTechToChannel(base_force, channel)
+local function syncAllTechToChannel(base_force, channel)
     local channel_force = get_channel_force(base_force, channel)
     if channel_force then
         for name,tech in pairs(base_force.technologies) do
@@ -316,14 +323,14 @@ function syncAllTechToChannel(base_force, channel)
     end
 end
 
-function syncAllTechToChannels(base_force)
+local function syncAllTechToChannels(base_force)
     for channel = 1,global.channelLimit do
         syncAllTechToChannel(base_force, channel)
     end
 
 end
 
-function syncChannelTechEnabled()
+local function syncChannelTechEnabled()
     -- Enable/disable channel tech based on mod startup setting.  Disabling channel tech removes
     -- it from the research screen.  Mod features will always be enabled if the tech is disabled
 

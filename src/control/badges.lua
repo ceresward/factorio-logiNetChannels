@@ -1,7 +1,25 @@
-local badges = {}
+-----------------------------------------------------------
+--  Internal implementation
+-----------------------------------------------------------
 
 local badgeScale = 2
 
+local function getPlayerBadges(playerIndex)
+    global.badges = global.badges or {}
+    global.badges[playerIndex] = global.badges[playerIndex] or {}
+    return global.badges[playerIndex]
+end
+
+local function clearPlayerBadges(playerIndex)
+    global.badges = global.badges or {}
+    global.badges[playerIndex] = {}
+end
+
+-----------------------------------------------------------
+-- External API
+-----------------------------------------------------------
+
+local badges = {}
 function badges.createOrUpdate(playerIndex, entity, channel)
     local badgeId = getPlayerBadges(playerIndex)[entity.unit_number]
     if badgeId and rendering.is_valid(badgeId) then
@@ -45,28 +63,5 @@ function badges.destroyAll(playerIndex)
     end
     clearPlayerBadges(playerIndex)
 end
-
-
------------------------------------------------------------
---  Private functions
------------------------------------------------------------
-
-function getPlayerBadges(playerIndex)
-    global.badges = global.badges or {}
-    global.badges[playerIndex] = global.badges[playerIndex] or {}
-    return global.badges[playerIndex]
-end
-
-function clearPlayerBadges(playerIndex)
-    global.badges = global.badges or {}
-    global.badges[playerIndex] = {}
-end
-
-function tablelength(T)
-    local count = 0
-    for _ in pairs(T) do count = count + 1 end
-    return count
-  end
-  
 
 return badges
