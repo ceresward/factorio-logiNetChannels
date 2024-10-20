@@ -146,7 +146,7 @@ local function set_channels(entities, channel)
                 base_force = game.forces[base_force_name]
                 if not base_force then
                     -- TODO: do something better...
-                    game.print("Unable to set entity channel: cannot find player force '"..base_name.."'")
+                    game.print("Unable to set entity channel: cannot find player force '"..base_force_name.."'")
                     return
                 end
                 baseForceCache[entity.force] = base_force
@@ -440,6 +440,7 @@ script.on_event(defines.events.on_gui_value_changed,
 script.on_event(defines.events.on_gui_confirmed,
     function(event)
         local player = game.get_player(event.player_index)
+        if player == nil then return end
 
         local editor = guis.editor_gui(player);
         if editor.visible and event.element == editor.sliderRow.textfield then
@@ -471,6 +472,8 @@ script.on_event(defines.events.on_gui_confirmed,
 script.on_event(defines.events.on_player_cursor_stack_changed,
     function(event)
         local player = game.get_player(event.player_index)
+        if player == nil then return end
+
         if is_holding_changer(player) then
             local friendlyForces = get_friends_of(player.force)
             
@@ -544,6 +547,8 @@ script.on_event(defines.events.on_player_selected_area,
 
         if event.item == 'logistic-channel-changer' then
             local player = game.get_player(event.player_index)
+            if player == nil then return end
+            
             local friendlyForces = get_friends_of(player.force)
 
             local entities = event.surface.find_entities_filtered {
