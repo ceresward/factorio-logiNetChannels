@@ -12,6 +12,12 @@ local guis = require("control.guis")
 local channels = require("control.channels")
 local badges = require("control.badges")
 
+-- Forward declarations for local functions that require them (TODO: reorganize code to avoid this)
+local syncAllTechToChannel
+local update_changer_gui
+local update_editor_gui
+local update_hover_gui
+
 local function is_map_multichannel()
     local channelLimit = global.channelLimit
     return channelLimit ~= nil and channelLimit > 1
@@ -107,8 +113,6 @@ local function get_channel_force(base_force, channel)
     end
 end
 
-local syncAllTechToChannel  -- Forward declaration; definition comes later
-
 local function get_or_create_channel_force(base_force, channel)
     if not channel or channel == 0 then
         return base_force
@@ -130,8 +134,6 @@ local function get_channel(entity)
     local _, channel = channels.parse_force_name(entity.force.name)
     return channel or 0
 end
-
-local update_hover_gui  -- forward declaraction
 
 local function set_channels(entities, channel)
     local baseForceCache = {}
@@ -202,9 +204,6 @@ local function is_holding_changer(player)
         and player.cursor_stack.name == "logistic-channel-changer"
 end
 
-local update_editor_gui  -- forward declaraction
-local update_changer_gui  -- forward declaration
-
 local function show_hide_guis(player)
     -- NOTE: this function is called on_tick so keep performance in mind!
 
@@ -237,7 +236,7 @@ local function show_hide_guis(player)
     changer.visible = (show == "changer")
 end
 
-local function update_editor_gui(player, channel)
+update_editor_gui = function(player, channel)
     if channel and channel > 0 then
         local base_force_name, _ = channels.parse_force_name(player.opened.force.name)
         local channel_force_name = channels.to_force_name(base_force_name, channel)
@@ -248,7 +247,7 @@ local function update_editor_gui(player, channel)
     end
 end
 
-local function update_hover_gui(player)
+update_hover_gui = function(player)
     local channel_force_name = player.selected.force.name
     local _, channel = channels.parse_force_name(channel_force_name)
 
@@ -259,7 +258,7 @@ local function update_hover_gui(player)
     end
 end
 
-local function update_changer_gui(player, channel)
+update_changer_gui = function(player, channel)
     if channel and channel > 0 then
         local channel_force_name = channels.to_force_name(player.force.name, channel)
         guis.update_changer(player, channel, get_channel_label(channel_force_name))
@@ -314,7 +313,7 @@ local function syncSingleTechToChannels(technology)
     end
 end
 
-local function syncAllTechToChannel(base_force, channel)
+syncAllTechToChannel = function(base_force, channel)
     local channel_force = get_channel_force(base_force, channel)
     if channel_force then
         for name,tech in pairs(base_force.technologies) do
