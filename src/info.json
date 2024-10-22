@@ -1,11 +1,11 @@
 {
     "name": "LogiNetChannels",
-    "version": "1.1.2",
+    "version": "2.0.0",
     "title": "Logistic Network Channels",
     "author": "ceresward",
     "contact": "https://reddit.com/u/ceresward",
     "homepage": "https://github.com/ceresward/factorio-logiNetChannels",
-    "factorio_version": "1.1",
-    "dependencies": ["base >= 1.1"],
-    "description": "Adds communication channels to logistic networks. Logistic entities can be assigned to different channels, and will only form a network with other entities on the same channel. This allows for creating separate logistic networks in areas where they would normally overlap and be merged by the game into one network."
+    "factorio_version": "2.0",
+    "dependencies": ["base >= 2.0"],
+    "description": "Adds communication channels to logistic networks.  Roboports, logistic chests, etc. can be assigned to different channels, and only form a network with other entities on the same channel. This allows separate logistic networks to be created with overlapping coverage areas that won't be merged by the game into a single network."
 }
