@@ -19,7 +19,7 @@ local update_editor_gui
 local update_hover_gui
 
 local function is_map_multichannel()
-    local channelLimit = global.channelLimit
+    local channelLimit = storage.channelLimit
     return channelLimit ~= nil and channelLimit > 1
 end
 
@@ -183,19 +183,19 @@ local function set_channel(entity, channel)
 end
 
 local function get_channel_label(channel_force_name)
-    global.channel_labels = global.channel_labels or {}
-    return global.channel_labels[channel_force_name] or ''
+    storage.channel_labels = storage.channel_labels or {}
+    return storage.channel_labels[channel_force_name] or ''
 end
 
 local function set_channel_label(channel_force_name, label)
-    global.channel_labels = global.channel_labels or {}
+    storage.channel_labels = storage.channel_labels or {}
     
     local _, channel = channels.parse_force_name(channel_force_name)
     if channel and channel > 0 then
         if label == '' then
             label = nil;
         end
-        global.channel_labels[channel_force_name] = label;
+        storage.channel_labels[channel_force_name] = label;
     end
 end
 
@@ -222,7 +222,7 @@ local function show_hide_guis(player)
         end
         
         if show == "editor" and not editor.visible then
-            editor.sliderRow.slider.set_slider_minimum_maximum(0, global.channelLimit - 1)
+            editor.sliderRow.slider.set_slider_minimum_maximum(0, storage.channelLimit - 1)
             update_editor_gui(player, get_channel(player.opened))
         elseif show == "changer" and not changer.visible then
             update_changer_gui(player, changer.sliderRow.slider.slider_value)
@@ -269,7 +269,7 @@ update_changer_gui = function(player, channel)
 end
 
 local function syncChannelLimit()
-    local currentLimit = global.channelLimit
+    local currentLimit = storage.channelLimit
     local newLimit = settings.global["logiNetChannelLimit"].value;
     
     if (currentLimit ~= newLimit) then
@@ -293,7 +293,7 @@ local function syncChannelLimit()
         end
     end
     
-    global.channelLimit = newLimit;
+    storage.channelLimit = newLimit;
 end
 
 -- Syncs all writeable properties from srcTech into destTech
@@ -305,7 +305,7 @@ local function syncTech(srcTech, destTech)
 end
 
 local function syncSingleTechToChannels(technology)
-    for channel = 1,global.channelLimit do
+    for channel = 1,storage.channelLimit do
         local channel_force = get_channel_force(technology.force, channel)
         if channel_force then
             syncTech(technology, channel_force.technologies[technology.name])
@@ -323,7 +323,7 @@ syncAllTechToChannel = function(base_force, channel)
 end
 
 local function syncAllTechToChannels(base_force)
-    for channel = 1,global.channelLimit do
+    for channel = 1,storage.channelLimit do
         syncAllTechToChannel(base_force, channel)
     end
 
@@ -558,12 +558,8 @@ script.on_event(defines.events.on_player_selected_area,
 
             if #entitiesWithChannels > 0 then
                 local channel = guis.changer_gui(player).sliderRow.slider.slider_value
-                
                 --game.print("logistic-channel-changer: updating "..tostring(#entitiesWithChannels).." entities to channel "..channel)
                 set_channels(entitiesWithChannels, channel)
-
-                -- Note:  if the devs ever add support, I can also use "utility/upgrade_selection_started" at selection start
-                player.play_sound { path = "utility/upgrade_selection_ended" }
             end
         end
     end

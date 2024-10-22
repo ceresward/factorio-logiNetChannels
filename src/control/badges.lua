@@ -5,14 +5,14 @@
 local badgeScale = 2
 
 local function getPlayerBadges(playerIndex)
-    global.badges = global.badges or {}
-    global.badges[playerIndex] = global.badges[playerIndex] or {}
-    return global.badges[playerIndex]
+    storage.badges = storage.badges or {}
+    storage.badges[playerIndex] = storage.badges[playerIndex] or {}
+    return storage.badges[playerIndex]
 end
 
 local function clearPlayerBadges(playerIndex)
-    global.badges = global.badges or {}
-    global.badges[playerIndex] = {}
+    storage.badges = storage.badges or {}
+    storage.badges[playerIndex] = {}
 end
 
 -----------------------------------------------------------
@@ -22,10 +22,11 @@ end
 local badges = {}
 function badges.createOrUpdate(playerIndex, entity, channel)
     local badgeId = getPlayerBadges(playerIndex)[entity.unit_number]
-    if badgeId and rendering.is_valid(badgeId) then
-        rendering.set_text(badgeId, tostring(channel))
+    local badge = badgeId and rendering.get_object_by_id(badgeId)
+    if badge and badge.valid then
+        badge.text = tostring(channel)
     else
-        badgeId = rendering.draw_text {
+        badge = rendering.draw_text {
             text = tostring(channel),
             -- text = "██",  -- Can be used for checking text bounding box / alignment
             surface = entity.surface,
@@ -38,28 +39,30 @@ function badges.createOrUpdate(playerIndex, entity, channel)
             alignment = "center",
             scale = badgeScale,
         }
-        getPlayerBadges(playerIndex)[entity.unit_number] = badgeId
+        getPlayerBadges(playerIndex)[entity.unit_number] = badge.id
     end
 end
 
 function badges.updateIfValid(playerIndex, entity, channel)
     local badgeId = getPlayerBadges(playerIndex)[entity.unit_number]
-    if badgeId and rendering.is_valid(badgeId) then
-        rendering.set_text(badgeId, tostring(channel))
+    local badge = badgeId and rendering.get_object_by_id(badgeId)
+    if badge and badge.valid then
+        badge.text = tostring(channel)
     end
 end
 
 function badges.destroy(playerIndex, entity)
     local badgeId = getPlayerBadges(playerIndex)[entity.unit_number]
-    if badgeId ~= nil then
-        rendering.destroy(badgeId)
+    local badge = badgeId and rendering.get_object_by_id(badgeId)
+    if badge ~= nil then
+        badge.destroy()
         getPlayerBadges(playerIndex)[entity.unit_number] = nil
     end
 end
 
 function badges.destroyAll(playerIndex)
     for _, badgeId in pairs(getPlayerBadges(playerIndex)) do
-        rendering.destroy(badgeId)
+        rendering.get_object_by_id(badgeId).destroy()
     end
     clearPlayerBadges(playerIndex)
 end

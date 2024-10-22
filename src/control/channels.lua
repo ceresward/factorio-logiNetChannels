@@ -18,8 +18,8 @@ function channels.parse_nearest_channel(channel_text)
     local channel = tonumber(channel_text)
     if not channel or channel < 0 then
         channel = 0
-    elseif channel >= global.channelLimit then
-        channel = global.channelLimit - 1
+    elseif channel >= storage.channelLimit then
+        channel = storage.channelLimit - 1
     end
     return channel
 end

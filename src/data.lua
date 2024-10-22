@@ -5,10 +5,10 @@
 local default_gui = data.raw["gui-style"].default
 default_gui["logiNetChannels_textfield_edit_channel"] = {
     type = "textbox_style",
-    parent = "search_textfield_with_fixed_width",
     minimal_width = 40,
     maximal_width = 40,
-    font = "default-large-semibold"
+    font = "default-large-semibold",
+    width = 150 -- Copied from 1.1 style 'search_textfield_with_fixed_width'
 }
 
 default_gui["logiNetChannels_slider_edit_channel"] = {
@@ -63,15 +63,26 @@ local channelChanger = {
         {icon = "__base__/graphics/icons/upgrade-planner.png", icon_size = 64, icon_mipmaps = 4},
         {icon = "__LogiNetChannels__/graphics/icons/channel-changer-shortcut-x32-white.png", icon_size = 32, scale = 0.75},
     },
-    flags = {"hidden", "not-stackable", "spawnable", "only-in-cursor", "draw-logistic-overlay"},
+    flags = {"not-stackable", "spawnable", "only-in-cursor", "draw-logistic-overlay"},
+    hidden = true,
     subgroup = "other",
     stack_size = 1,
-    selection_color = data.raw["upgrade-item"]["upgrade-planner"].selection_color,
-    alt_selection_color = data.raw["upgrade-item"]["upgrade-planner"].selection_color,
-    selection_mode = {"nothing"},
-    alt_selection_mode = {"nothing"},
-    selection_cursor_box_type = "copy",
-    alt_selection_cursor_box_type = "copy",
+    select = {
+        border_color = data.raw["upgrade-item"]["upgrade-planner"].select.border_color,
+        cursor_box_type = "copy",
+        mode = {"nothing"},
+        started_sound = { filename = "__core__/sound/upgrade-select-start.ogg" },
+        -- TODO: figure out why this won't play
+        ended_sound = { filename = "__core__/sound/upgrade-select-end.ogg" }
+    },
+    alt_select = {
+        border_color = data.raw["upgrade-item"]["upgrade-planner"].select.border_color,
+        cursor_box_type = "copy",
+        mode = {"nothing"},
+        started_sound = { filename = "__core__/sound/upgrade-select-start.ogg" },
+        -- TODO: figure out why this won't play
+        ended_sound = { filename = "__core__/sound/upgrade-select-end.ogg" }
+    }
 }
 
 local channelChangerShortcut = {
@@ -79,15 +90,12 @@ local channelChangerShortcut = {
     type = "shortcut",
     action = "spawn-item",
     item_to_spawn = "logistic-channel-changer",
-    -- TODO: polish existing shortcut icon (improve appearance, add mipmaps, etc.)
-    -- TODO: add small_icon, disabled_icon, and disabled_small_icon variants
-    icon = {
-        filename = "__LogiNetChannels__/graphics/icons/channel-changer-shortcut-x32-white.png",
-        priority = "extra-high-no-scale",
-        size = 32,
-        scale = 0.5,
-        flags = {"gui-icon"}
-    },
+    -- TODO: polish existing shortcut icon (improve appearance, etc.)
+    -- TODO: add small_icon variants
+    icon = "__LogiNetChannels__/graphics/icons/channel-changer-shortcut-x32-white.png",
+    icon_size = 32,
+    small_icon = "__LogiNetChannels__/graphics/icons/channel-changer-shortcut-x32-white.png",
+    small_icon_size = 32,
     style = "green",
     technology_to_unlock = "logistic-channels",
 }
