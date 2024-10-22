@@ -1,12 +1,12 @@
-# Notice: Factorio 2.0 Plans
+# Notice: Factorio 2.0
 
-Some of you may be wondering, what will happen with this mod when Factorio 2.0 and the Space Age DLC are released?  The short answer is - this mod will be updated to support Factorio 2.0 and Space Age, and you can still play with it if you like.  However, you may find you no longer need it!  The Factorio team have made a number of awesome improvements to how bots behave that should help to make large networks a lot less annoying to deal with:
+Logistic Network Channels has been updated to work with Factorio 2.0 and Space Age.  Use it if you like, however, you may find you no longer need it!  The Factorio team have made a number of awesome improvements to how bots behave that should help to make large networks a lot less annoying to deal with:
 
 - Robots are chosen to service requests based on predicted arrival time instead of nearest idle robot
 - Individual roboports can now be configured to keep a certain number of robots stationed at the roboport at all times
 - Robots are now much smarter when picking a roboport to recharge at
 
-You can read more about all of these changes in [FFF-374](https://www.factorio.com/blog/post/fff-374).  I have yet to see how effective these changes are in practice, however I am optimistic that they will be good enough to remove the need for this mod.  I am not planning on making any major updates to this mod in the future unless there is still a need for it.
+You can read more about all of these changes in [FFF-374](https://www.factorio.com/blog/post/fff-374).  I have yet to see how effective these changes are in practice, however I am optimistic that they will be good enough to make this mod redundant.  I am not planning on introducing any major new features to the mod, however I will continue to fix bugs for it as needed.
 
 # Description
 
